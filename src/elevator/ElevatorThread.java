@@ -58,6 +58,7 @@ public class ElevatorThread extends Thread {
                     elevator.openDoor();
                     preciselySleep(ElevatorLimits.OPENED_DURATION_MS);
                 } else if (strategyType == Strategy.ElevatorStrategyType.REVISE_MOVE) {
+                    preciselySleep(ElevatorLimits.MOVE_DURATION_MS);
                     elevator.moveReversely();
                 } else if (strategyType == Strategy.ElevatorStrategyType.REVISE_OPEN) {
                     elevator.reverse();
