@@ -6,6 +6,8 @@ deps/
 .idea/
 *.iml
 
+src/TestMain.java
+
 ### Eclipse ###
 .apt_generated
 .classpath

@@ -24,19 +24,19 @@ public class FormattedPrinter {
 
     public static long elevatorOpen(Elevator elevator) {
         return TimableOutput.println(
-                String.format("OPEN-%d-%d", elevator.getElevatorId(), elevator.getFloor())
+                String.format("OPEN-%d-%d", elevator.getFloor(), elevator.getElevatorId())
         );
     }
 
     public static long elevatorClose(Elevator elevator) {
         return TimableOutput.println(
-                String.format("CLOSE-%d-%d", elevator.getElevatorId(), elevator.getFloor())
+                String.format("CLOSE-%d-%d", elevator.getFloor(), elevator.getElevatorId())
         );
     }
 
     public static long elevatorArrive(Elevator elevator) {
         return TimableOutput.println(
-                String.format("ARRIVE-%d-%d", elevator.getElevatorId(), elevator.getFloor())
+                String.format("ARRIVE-%d-%d", elevator.getFloor(), elevator.getElevatorId())
         );
     }
 

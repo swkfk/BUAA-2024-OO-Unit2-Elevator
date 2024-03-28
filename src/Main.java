@@ -18,7 +18,6 @@ public class Main {
             PassageRequestsQueue parallelQueue = new PassageRequestsQueue();
             processingQueues.add(parallelQueue);
             ElevatorThread elevator = new ElevatorThread(i + 1, parallelQueue);
-            processingQueues.add(parallelQueue);
             elevator.start();
         }
 

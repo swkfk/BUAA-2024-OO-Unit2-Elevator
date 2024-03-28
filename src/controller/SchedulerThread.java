@@ -35,7 +35,7 @@ public class SchedulerThread extends Thread {
             // Do the scheduling
             // FormattedPrinter.passengerEnter(request);
             int targetElevatorId = request.getElevatorId();
-            passageRequestsQueues.get(targetElevatorId).addRequest(request);
+            passageRequestsQueues.get(targetElevatorId - 1).addRequest(request);
         }
     }
 }
