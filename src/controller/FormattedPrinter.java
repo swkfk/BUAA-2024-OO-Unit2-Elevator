@@ -40,15 +40,8 @@ public class FormattedPrinter {
         );
     }
 
-    public static long debug(Elevator elevator) {
-        return TimableOutput.println(
-                String.format("DEBUG-Elevator-%d@%d", elevator.getElevatorId(), elevator.getFloor())
-        );
+    public static long debug(Object obj) {
+        return TimableOutput.println("[Debug]" + obj.toString());
     }
 
-    public static long debug(PassageRequest request) {
-        return TimableOutput.println(
-                String.format("DEBUG-Person-%d@%d", request.getPersonId(), request.getElevatorId())
-        );
-    }
 }

@@ -45,11 +45,13 @@ public class PassageRequestsQueue {
     }
 
     public synchronized PassageRequest popRequestWithoutWait() {
+        // System.out.println("popRequestWithoutWait");
         if (requests.isEmpty()) {
             return null;
         }
         PassageRequest request = requests.get(0);
         requests.remove(0);
+        // System.out.println("popRequestWithoutWait" + request);
         this.notify();
         return request;
     }

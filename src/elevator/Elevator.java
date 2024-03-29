@@ -25,7 +25,7 @@ public class Elevator {
     }
 
     public boolean canTerminate() {
-        return passageRequests.isEmpty() && onboardRequests.isEmpty();
+        return passageRequests.isEmpty() && onboardRequests.isEmpty() && !doorOpen;
     }
 
     public int getElevatorId() {
