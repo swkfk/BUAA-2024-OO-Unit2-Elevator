@@ -1,6 +1,5 @@
 package elevator;
 
-import controller.FormattedPrinter;
 import controller.Strategy;
 import requests.PassageRequest;
 import requests.PassageRequestsQueue;

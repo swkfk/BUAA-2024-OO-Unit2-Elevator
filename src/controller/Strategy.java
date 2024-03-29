@@ -14,68 +14,57 @@ public class Strategy {
     public static ElevatorStrategyType elevatorStrategy(
             ArrayList<PassageRequest> requests, ArrayList<PassageRequest> onboards,
             int floor, ElevatorDirection direction) {
-        if (needOpen(requests, onboards, floor, direction)) {
+        if (needOpenOut(onboards, floor) || needOpenIn(requests, onboards, floor, direction)) {
             return ElevatorStrategyType.OPEN;
         }
-        // No need to open the door
+        // vvv No passengers want to leave vvv
         if (!onboards.isEmpty()) {
+            // Have passengers onboard, move directly
             return ElevatorStrategyType.MOVE;
         }
-        // No people onboard
+        // vvv No people onboard vvv
         if (requests.isEmpty()) {
+            // No requests in queue, wait
             return ElevatorStrategyType.WAIT;
         }
-        // Have requests somewhere
-        int sameDirectionCount = 0;
+        // vvv Have requests somewhere vvv
+        boolean requestSameDirection = false;
+        // boolean requestReverseDirection = false;
+        boolean requestGoReversely = false;
         for (PassageRequest request : requests) {
+            ElevatorDirection due = ElevatorDirection.construct(floor, request.getFromFloor());
             if (request.getFromFloor() == floor) {
-                if (request.sameDirection(direction)) {
-                    sameDirectionCount++;
-                } else {
-                    sameDirectionCount--;
-                }
-            }
-            if (sameDirectionCount > 0) {
-                return ElevatorStrategyType.OPEN;
-            } else if (sameDirectionCount < 0) {
-                return ElevatorStrategyType.REVISE_OPEN;
-            }
+                // It must be reversed
+                requestGoReversely = true;
+            } else if (direction == due) {
+                requestSameDirection = true;
+            } /* else {
+                requestReverseDirection = true;
+            } */
         }
-        // The elevator should move to the get the nearest request
-        int upCost = 0;
-        int downCost = 0;
-        ElevatorDirection dueDirection;
-        for (PassageRequest request : requests) {
-            if (request.getFromFloor() > floor) {
-                upCost += request.getFromFloor() - floor;
-            } else {
-                downCost += floor - request.getFromFloor();
-            }
-        }
-        // TODO: We need a fine-tuned strategy here
-        if (upCost < downCost) {
-            dueDirection = ElevatorDirection.DOWN;
-        } else {
-            dueDirection = ElevatorDirection.UP;
-        }
-        // Move or move reversely
-        if (dueDirection == direction) {
+        if (requestSameDirection) {
             return ElevatorStrategyType.MOVE;
-        } else {
+        } else if (requestGoReversely) {
+            return ElevatorStrategyType.REVISE_OPEN;
+        } else /*if (requestReverseDirection)*/ {
             return ElevatorStrategyType.REVISE_MOVE;
         }
     }
 
-    private static boolean needOpen(
+    private static boolean needOpenIn(
             ArrayList<PassageRequest> requests, ArrayList<PassageRequest> onboards,
             int floor, ElevatorDirection direction) {
-        if (onboards.size() < ElevatorLimits.MAX_PASSENGER) {
-            for (PassageRequest request : requests) {
-                if (request.getFromFloor() == floor && request.sameDirection(direction)) {
+        for (PassageRequest request : requests) {
+            if (request.getFromFloor() == floor && request.sameDirection(direction)) {
+                if (onboards.size() < ElevatorLimits.MAX_PASSENGER) {
                     return true;
                 }
             }
         }
+        return false;
+    }
+
+    private static boolean needOpenOut(ArrayList<PassageRequest> onboards, int floor) {
         for (PassageRequest onboard : onboards) {
             if (onboard.getToFloor() == floor) {
                 return true;
