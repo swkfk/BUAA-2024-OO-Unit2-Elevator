@@ -18,9 +18,11 @@ public class ElevatorThread extends Thread {
 
     private void preciselySleep(long durationMS) {
         try {
-            Thread.sleep(
-                    Math.min(durationMS,  timeSnippet + durationMS - System.currentTimeMillis())
-            );
+            long t = Math.min(durationMS,  timeSnippet + durationMS - System.currentTimeMillis());
+            if (t < 0) {
+                return;
+            }
+            Thread.sleep(t);
         } catch (InterruptedException e) {
             // e.printStackTrace();
         }
