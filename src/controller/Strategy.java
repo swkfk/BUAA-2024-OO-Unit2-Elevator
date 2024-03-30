@@ -24,6 +24,10 @@ public class Strategy {
                 // Have requests ahead
                 return ElevatorStrategyType.OPEN;
             }
+            if (hasRemainedOnboards(onboards, floor)) {
+                // Have passengers onboard
+                return ElevatorStrategyType.OPEN;
+            }
             // No requests ahead and No passengers at the same direction
             return ElevatorStrategyType.REVISE_OPEN;
         }
@@ -112,5 +116,14 @@ public class Strategy {
         } else {
             return hasRequestsDown(requests, floor);
         }
+    }
+
+    private static boolean hasRemainedOnboards(ArrayList<PassageRequest> onboards, int floor) {
+        for (PassageRequest onboard : onboards) {
+            if (onboard.getToFloor() != floor) {
+                return true;
+            }
+        }
+        return false;
     }
 }
