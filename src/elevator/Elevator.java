@@ -78,8 +78,9 @@ public class Elevator {
         return doorOpen;
     }
 
-    public void openDoor() {
+    public long openDoor() {
         FormattedPrinter.elevatorOpen(this);
+        long t = System.currentTimeMillis();
         doorOpen = true;
         Iterator<PassageRequest> iterator = onboardRequests.iterator();
         while (iterator.hasNext()) {
@@ -89,6 +90,7 @@ public class Elevator {
                 iterator.remove();
             }
         }
+        return t;
     }
 
     public void closeDoor() {

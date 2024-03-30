@@ -7,20 +7,31 @@ import requests.PassageRequestsQueue;
 public class ElevatorThread extends Thread {
     private final Elevator elevator;
     private final PassageRequestsQueue requestsQueue;
+    private long timeSnippet;
 
     public ElevatorThread(int elevatorId, PassageRequestsQueue requestsQueue) {
         super(String.format("Thread-Elevator-%d", elevatorId));
         this.elevator = new Elevator(elevatorId);
         this.requestsQueue = requestsQueue;
+        this.createTimeSnippet();
     }
 
     private void preciselySleep(long durationMS) {
         try {
-            // TODO: sleep precisely
-            Thread.sleep(durationMS);
+            Thread.sleep(
+                    Math.min(durationMS,  timeSnippet + durationMS - System.currentTimeMillis())
+            );
         } catch (InterruptedException e) {
             // e.printStackTrace();
         }
+    }
+
+    private void createTimeSnippet() {
+        this.timeSnippet = System.currentTimeMillis();
+    }
+
+    private void createTimeSnippet(long t) {
+        this.timeSnippet = t;
     }
 
     @Override
@@ -37,12 +48,19 @@ public class ElevatorThread extends Thread {
                 while (request != null) {
                     // Add request to elevator directly
                     elevator.addRequest(request);
+                    try {
+                        // How dare you! It's strange to wait for 1ms but useful?
+                        this.requestsQueue.wait(1);
+                    } catch (InterruptedException e) {
+                        // e.printStackTrace();
+                    }
                     request = requestsQueue.popRequestWithoutWait();
                 }
             }
             // Maybe strange, and maybe not
             if (elevator.isDoorOpen()) {
                 elevator.closeDoor();
+                createTimeSnippet();
                 continue;
             }
             // Handle the exist request or run the elevator
@@ -61,16 +79,19 @@ public class ElevatorThread extends Thread {
                 }
             } else if (strategyType == Strategy.ElevatorStrategyType.MOVE) {
                 preciselySleep(ElevatorLimits.MOVE_DURATION_MS);
-                elevator.move();
+                elevator.move();  // Output first
+                createTimeSnippet();  // Then record the time
             } else if (strategyType == Strategy.ElevatorStrategyType.OPEN) {
-                elevator.openDoor();
+                createTimeSnippet(elevator.openDoor());
                 preciselySleep(ElevatorLimits.OPENED_DURATION_MS);
+                createTimeSnippet();
             } else if (strategyType == Strategy.ElevatorStrategyType.REVISE_MOVE) {
                 preciselySleep(ElevatorLimits.MOVE_DURATION_MS);
                 elevator.moveReversely();
+                createTimeSnippet();
             } else if (strategyType == Strategy.ElevatorStrategyType.REVISE_OPEN) {
                 elevator.reverse();
-                elevator.openDoor();
+                createTimeSnippet(elevator.openDoor());
                 preciselySleep(ElevatorLimits.OPENED_DURATION_MS);
             }
         }
