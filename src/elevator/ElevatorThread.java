@@ -19,7 +19,7 @@ public class ElevatorThread extends Thread {
     private void preciselySleep(long durationMS) {
         try {
             long t = Math.min(durationMS,  timeSnippet + durationMS - System.currentTimeMillis());
-            if (t < 0) {
+            if (t <= 0) {
                 return;
             }
             Thread.sleep(t);
@@ -36,29 +36,33 @@ public class ElevatorThread extends Thread {
         this.timeSnippet = t;
     }
 
+    private boolean tryGetRequest() {
+        synchronized (this.requestsQueue) {
+            if (this.requestsQueue.isEnd() && this.requestsQueue.isEmpty()
+                    && elevator.canTerminate()) {
+                return false;
+            }
+            PassageRequest request = requestsQueue.popRequestWithoutWait();
+            while (request != null) {
+                // Add request to elevator directly
+                elevator.addRequest(request);
+                try {
+                    // How dare you! It's strange to wait for 1ms but useful?
+                    this.requestsQueue.wait(1);
+                } catch (InterruptedException e) {
+                    // e.printStackTrace();
+                }
+                request = requestsQueue.popRequestWithoutWait();
+            }
+        }
+        return true;
+    }
+
     @Override
     public void run() {
 
         // The lock of requestsQueue will not occupy a lot of time, maybe
-        while (true) {
-            synchronized (this.requestsQueue) {
-                if (this.requestsQueue.isEnd() && this.requestsQueue.isEmpty()
-                        && elevator.canTerminate()) {
-                    break;
-                }
-                PassageRequest request = requestsQueue.popRequestWithoutWait();
-                while (request != null) {
-                    // Add request to elevator directly
-                    elevator.addRequest(request);
-                    try {
-                        // How dare you! It's strange to wait for 1ms but useful?
-                        this.requestsQueue.wait(1);
-                    } catch (InterruptedException e) {
-                        // e.printStackTrace();
-                    }
-                    request = requestsQueue.popRequestWithoutWait();
-                }
-            }
+        while (tryGetRequest()) {
             // Maybe strange, and maybe not
             if (elevator.isDoorOpen()) {
                 elevator.closeDoor();
@@ -81,6 +85,14 @@ public class ElevatorThread extends Thread {
                 }
             } else if (strategyType == Strategy.ElevatorStrategyType.MOVE) {
                 preciselySleep(ElevatorLimits.MOVE_DURATION_MS);
+                tryGetRequest();
+                strategyType = Strategy.elevatorStrategy(
+                        elevator.getRequests(), elevator.getOnboards(),
+                        elevator.getFloor(), elevator.getDirection()
+                );
+                if (strategyType == Strategy.ElevatorStrategyType.OPEN) {
+                    continue;
+                }
                 elevator.move();  // Output first
                 createTimeSnippet();  // Then record the time
             } else if (strategyType == Strategy.ElevatorStrategyType.OPEN) {
@@ -89,6 +101,14 @@ public class ElevatorThread extends Thread {
                 createTimeSnippet();
             } else if (strategyType == Strategy.ElevatorStrategyType.REVISE_MOVE) {
                 preciselySleep(ElevatorLimits.MOVE_DURATION_MS);
+                tryGetRequest();
+                strategyType = Strategy.elevatorStrategy(
+                        elevator.getRequests(), elevator.getOnboards(),
+                        elevator.getFloor(), elevator.getDirection()
+                );
+                if (strategyType == Strategy.ElevatorStrategyType.OPEN) {
+                    continue;
+                }
                 elevator.moveReversely();
                 createTimeSnippet();
             } else if (strategyType == Strategy.ElevatorStrategyType.REVISE_OPEN) {
