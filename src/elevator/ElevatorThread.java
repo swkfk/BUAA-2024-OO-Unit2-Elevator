@@ -72,7 +72,7 @@ public class ElevatorThread extends Thread {
             // Handle the exist request or run the elevator
             Strategy.ElevatorStrategyType strategyType = Strategy.elevatorStrategy(
                     elevator.getRequests(), elevator.getOnboards(),
-                    elevator.getFloor(), elevator.getDirection()
+                    elevator.getFloor(), elevator.getDirection(), elevator.getMaxPassenger()
             );
             // FormattedPrinter.debug(strategyType);
             if (strategyType == Strategy.ElevatorStrategyType.WAIT) {
@@ -84,11 +84,11 @@ public class ElevatorThread extends Thread {
                     }
                 }
             } else if (strategyType == Strategy.ElevatorStrategyType.MOVE) {
-                preciselySleep(ElevatorLimits.MOVE_DURATION_MS);
+                preciselySleep(elevator.getMoveDurationMs());
                 tryGetRequest();
                 strategyType = Strategy.elevatorStrategy(
                         elevator.getRequests(), elevator.getOnboards(),
-                        elevator.getFloor(), elevator.getDirection()
+                        elevator.getFloor(), elevator.getDirection(), elevator.getMaxPassenger()
                 );
                 if (strategyType == Strategy.ElevatorStrategyType.OPEN) {
                     continue;
@@ -100,11 +100,11 @@ public class ElevatorThread extends Thread {
                 preciselySleep(ElevatorLimits.OPENED_DURATION_MS);
                 createTimeSnippet();
             } else if (strategyType == Strategy.ElevatorStrategyType.REVISE_MOVE) {
-                preciselySleep(ElevatorLimits.MOVE_DURATION_MS);
+                preciselySleep(elevator.getMoveDurationMs());
                 tryGetRequest();
                 strategyType = Strategy.elevatorStrategy(
                         elevator.getRequests(), elevator.getOnboards(),
-                        elevator.getFloor(), elevator.getDirection()
+                        elevator.getFloor(), elevator.getDirection(), elevator.getMaxPassenger()
                 );
                 if (strategyType == Strategy.ElevatorStrategyType.OPEN) {
                     continue;

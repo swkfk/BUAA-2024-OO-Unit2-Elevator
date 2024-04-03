@@ -14,6 +14,7 @@ public class Elevator {
     private final ArrayList<PassageRequest> passageRequests;
 
     private final ArrayList<PassageRequest> onboardRequests;
+    private ElevatorLimits limits;
 
     public Elevator(int elevatorId) {
         this.elevatorId = elevatorId;
@@ -22,6 +23,7 @@ public class Elevator {
         this.floor = ElevatorLimits.MIN_FLOOR;
         this.passageRequests = new ArrayList<>();
         this.onboardRequests = new ArrayList<>();
+        this.limits = new ElevatorLimits();
     }
 
     public boolean canTerminate() {
@@ -98,7 +100,7 @@ public class Elevator {
         while (iterator.hasNext()) {
             PassageRequest request = iterator.next();
             if (request.getFromFloor() == floor
-                    && onboardRequests.size() < ElevatorLimits.MAX_PASSENGER
+                    && onboardRequests.size() < limits.getMaxPassenger()
                     && request.sameDirection(direction)) {
                 FormattedPrinter.passengerEnter(request);
                 onboardRequests.add(request);
@@ -107,5 +109,17 @@ public class Elevator {
         }
         doorOpen = false;
         FormattedPrinter.elevatorClose(this);
+    }
+
+    public void reset(int maxPassenger, double moveDurationSec) {
+        this.limits = new ElevatorLimits(maxPassenger, (long)(moveDurationSec * 1000));
+    }
+
+    public long getMoveDurationMs() {
+        return limits.getMoveDurationMs();
+    }
+
+    public int getMaxPassenger() {
+        return limits.getMaxPassenger();
     }
 }

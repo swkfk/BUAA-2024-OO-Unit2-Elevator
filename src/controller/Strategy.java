@@ -13,7 +13,7 @@ public class Strategy {
 
     public static ElevatorStrategyType elevatorStrategy(
             ArrayList<PassageRequest> requests, ArrayList<PassageRequest> onboards,
-            int floor, ElevatorDirection direction) {
+            int floor, ElevatorDirection direction, int maxPassenger) {
         // If someone want to leave, must open the door!
         if (needOpenOut(onboards, floor)) {
             if (hasRequestSameDirectionThisFloor(requests, floor, direction)) {
@@ -32,7 +32,7 @@ public class Strategy {
             return ElevatorStrategyType.REVISE_OPEN;
         }
         // vvv No passengers want to leave vvv
-        if (onboards.size() == ElevatorLimits.MAX_PASSENGER) {
+        if (onboards.size() == maxPassenger) {
             // Full of passengers, move directly
             return ElevatorStrategyType.MOVE;
         } else if (onboards.isEmpty()) {

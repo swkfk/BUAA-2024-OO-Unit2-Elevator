@@ -1,12 +1,29 @@
 package elevator;
 
 public class ElevatorLimits {
-    public static final int MAX_PASSENGER = 6;
+    private int maxPassenger = 6;
     public static final int ELEVATOR_COUNT = 6;
     public static final int MIN_FLOOR = 1;
     public static final int MAX_FLOOR = 11;
-    public static final int MOVE_DURATION_MS = 400;
-    public static final int OPEN_DURATION_MS = 200;
-    public static final int CLOSE_DURATION_MS = 200;
-    public static final int OPENED_DURATION_MS = OPEN_DURATION_MS + CLOSE_DURATION_MS;
+    private long moveDurationMs = 400;
+    public static final long OPEN_DURATION_MS = 200;
+    public static final long CLOSE_DURATION_MS = 200;
+    public static final long OPENED_DURATION_MS = OPEN_DURATION_MS + CLOSE_DURATION_MS;
+
+    public ElevatorLimits() {
+    }
+
+    public ElevatorLimits(int maxPassenger, long moveDurationMs) {
+        System.out.println(moveDurationMs);  // To check the float precision
+        this.maxPassenger = maxPassenger;
+        this.moveDurationMs = moveDurationMs;
+    }
+
+    public int getMaxPassenger() {
+        return maxPassenger;
+    }
+
+    public long getMoveDurationMs() {
+        return moveDurationMs;
+    }
 }
