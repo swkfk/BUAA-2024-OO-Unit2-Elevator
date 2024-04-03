@@ -1,20 +1,20 @@
 package requests;
 
-import com.oocourse.elevator1.PersonRequest;
+import com.oocourse.elevator2.PersonRequest;
 import elevator.ElevatorDirection;
 
 public class PassageRequest {
     private final int fromFloor;
     private final int toFloor;
     private final int personId;
-    private final int elevatorId;
+    private int elevatorId;
     private final ElevatorDirection direction;
 
     public PassageRequest(PersonRequest request) {
         this.fromFloor = request.getFromFloor();
         this.toFloor = request.getToFloor();
         this.personId = request.getPersonId();
-        this.elevatorId = request.getElevatorId();
+        this.elevatorId = -1;
         this.direction = toFloor > fromFloor ? ElevatorDirection.UP : ElevatorDirection.DOWN;
     }
 
@@ -32,6 +32,10 @@ public class PassageRequest {
 
     public int getElevatorId() {
         return elevatorId;
+    }
+
+    public void setElevatorId(int elevatorId) {
+        this.elevatorId = elevatorId;
     }
 
     public boolean sameDirection(ElevatorDirection direction) {

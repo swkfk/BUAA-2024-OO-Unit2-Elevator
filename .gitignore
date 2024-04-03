@@ -5,6 +5,7 @@ deps/
 !**/src/test/**/out/
 .idea/
 *.iml
+src/META-INF/
 
 src/TestMain.java
 

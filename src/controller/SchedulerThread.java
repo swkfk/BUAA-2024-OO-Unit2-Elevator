@@ -8,6 +8,7 @@ import java.util.ArrayList;
 public class SchedulerThread extends Thread {
     private final PassageRequestsQueue waitQueue;
     private final ArrayList<PassageRequestsQueue> passageRequestsQueues;
+    private int passengerId = 0;
 
     public SchedulerThread(
             PassageRequestsQueue waitQueue, ArrayList<PassageRequestsQueue> passageRequestsQueues
@@ -34,8 +35,15 @@ public class SchedulerThread extends Thread {
             }
             // Do the scheduling
             // FormattedPrinter.passengerEnter(request);
+            request.setElevatorId(doSchedule(request));
+            FormattedPrinter.receiveRequest(request);
             int targetElevatorId = request.getElevatorId();
             passageRequestsQueues.get(targetElevatorId - 1).addRequest(request);
         }
+    }
+
+    private int doSchedule(PassageRequest request) {
+        passengerId++;
+        return (passengerId % 6) + 1;
     }
 }

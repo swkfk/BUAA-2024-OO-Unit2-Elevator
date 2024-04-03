@@ -1,7 +1,8 @@
 package controller;
 
-import com.oocourse.elevator1.ElevatorInput;
-import com.oocourse.elevator1.PersonRequest;
+import com.oocourse.elevator2.ElevatorInput;
+import com.oocourse.elevator2.PersonRequest;
+import com.oocourse.elevator2.Request;
 import requests.PassageRequest;
 import requests.PassageRequestsQueue;
 
@@ -19,13 +20,14 @@ public class InputThread extends Thread {
     public void run() {
         try {
             while (true) {
-                PersonRequest request = elevatorInput.nextPersonRequest();
+                Request request = elevatorInput.nextRequest();
                 if (request == null) {
                     waitQueue.setEnd();
                     break;
                 } else {
-                    waitQueue.addRequest(new PassageRequest(request));
-                    // FormattedPrinter.debug(new PassageRequest(request));
+                    if (request instanceof PersonRequest) {
+                        waitQueue.addRequest(new PassageRequest((PersonRequest) request));
+                    }
                 }
             }
             elevatorInput.close();

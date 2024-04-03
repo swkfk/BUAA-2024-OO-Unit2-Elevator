@@ -1,6 +1,6 @@
 package controller;
 
-import com.oocourse.elevator1.TimableOutput;
+import com.oocourse.elevator2.TimableOutput;
 import elevator.Elevator;
 import requests.PassageRequest;
 
@@ -36,6 +36,12 @@ public class FormattedPrinter {
     public static long elevatorArrive(Elevator elevator) {
         return TimableOutput.println(
                 String.format("ARRIVE-%d-%d", elevator.getFloor(), elevator.getElevatorId())
+        );
+    }
+
+    public static long receiveRequest(PassageRequest request) {
+        return TimableOutput.println(
+                String.format("RECEIVE-%d-%d", request.getPersonId(), request.getElevatorId())
         );
     }
 
