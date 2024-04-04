@@ -2,6 +2,7 @@ package elevator;
 
 import controller.FormattedPrinter;
 import requests.PassageRequest;
+import requests.ResetRequest;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -111,8 +112,12 @@ public class Elevator {
         FormattedPrinter.elevatorClose(this);
     }
 
-    public void reset(int maxPassenger, double moveDurationSec) {
+    private void reset(int maxPassenger, double moveDurationSec) {
         this.limits = new ElevatorLimits(maxPassenger, (long)(moveDurationSec * 1000));
+    }
+
+    public void reset(ResetRequest request) {
+        reset(request.getMaxPassenger(), request.getMoveDurationSec());
     }
 
     public long getMoveDurationMs() {

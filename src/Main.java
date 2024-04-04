@@ -4,7 +4,10 @@ import controller.SchedulerThread;
 import elevator.ElevatorLimits;
 import elevator.ElevatorStatus;
 import elevator.ElevatorThread;
-import requests.PassageRequestsQueue;
+import requests.BaseRequest;
+import requests.PassageRequest;
+import requests.RequestsQueue;
+import requests.ResetRequest;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicReference;
@@ -13,21 +16,24 @@ public class Main {
     public static void main(String[] args) {
         TimableOutput.initStartTimestamp();
 
-        PassageRequestsQueue waitQueue = new PassageRequestsQueue();
-        ArrayList<PassageRequestsQueue> processingQueues = new ArrayList<>();
+        RequestsQueue<BaseRequest> waitQueue = new RequestsQueue<>();
+        ArrayList<RequestsQueue<PassageRequest>> processingQueues = new ArrayList<>();
         ArrayList<AtomicReference<ElevatorStatus>> elevatorStatuses = new ArrayList<>();
+        ArrayList<AtomicReference<ResetRequest>> elevatorResets = new ArrayList<>();
 
         for (int i = 0; i < ElevatorLimits.ELEVATOR_COUNT; i++) {
-            PassageRequestsQueue parallelQueue = new PassageRequestsQueue();
-            AtomicReference<ElevatorStatus> status = new AtomicReference<>();
+            RequestsQueue<PassageRequest> parallelQueue = new RequestsQueue<>();
             processingQueues.add(parallelQueue);
+            AtomicReference<ElevatorStatus> status = new AtomicReference<>();
             elevatorStatuses.add(status);
-            ElevatorThread elevator = new ElevatorThread(i + 1, parallelQueue, status);
+            AtomicReference<ResetRequest> reset = new AtomicReference<>();
+            elevatorResets.add(reset);
+            ElevatorThread elevator = new ElevatorThread(i + 1, parallelQueue, status, reset);
             elevator.start();
         }
 
         SchedulerThread scheduler =
-                new SchedulerThread(waitQueue, processingQueues, elevatorStatuses);
+                new SchedulerThread(waitQueue, processingQueues, elevatorStatuses, elevatorResets);
         scheduler.start();
 
         InputThread inputThread = new InputThread(waitQueue);

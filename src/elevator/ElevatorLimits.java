@@ -9,12 +9,13 @@ public class ElevatorLimits {
     public static final long OPEN_DURATION_MS = 200;
     public static final long CLOSE_DURATION_MS = 200;
     public static final long OPENED_DURATION_MS = OPEN_DURATION_MS + CLOSE_DURATION_MS;
+    public static final long RESET_DURATION_MS = 1200;
 
     public ElevatorLimits() {
     }
 
     public ElevatorLimits(int maxPassenger, long moveDurationMs) {
-        System.out.println(moveDurationMs);  // To check the float precision
+        // System.out.println(moveDurationMs);  // To check the float precision
         this.maxPassenger = maxPassenger;
         this.moveDurationMs = moveDurationMs;
     }

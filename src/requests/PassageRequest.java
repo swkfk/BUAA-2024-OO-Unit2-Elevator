@@ -3,7 +3,7 @@ package requests;
 import com.oocourse.elevator2.PersonRequest;
 import elevator.ElevatorDirection;
 
-public class PassageRequest {
+public class PassageRequest extends BaseRequest {
     private final int fromFloor;
     private final int toFloor;
     private final int personId;

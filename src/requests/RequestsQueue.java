@@ -2,11 +2,15 @@ package requests;
 
 import java.util.LinkedList;
 
-public class PassageRequestsQueue {
-    private final LinkedList<PassageRequest> requests = new LinkedList<>();
+public class RequestsQueue<T> {
+    private final LinkedList<T> requests = new LinkedList<>();
     private boolean isEnd = false;
 
-    public synchronized void addRequest(PassageRequest request) {
+    public synchronized void rawNotify() {
+        this.notify();
+    }
+
+    public synchronized void addRequest(T request) {
         requests.add(request);
         // If it is the waitQueue, the only one thread is Scheduler
         // If it is the passageRequestsQueue, the only one thread is Elevator
@@ -27,7 +31,7 @@ public class PassageRequestsQueue {
         return requests.isEmpty();
     }
 
-    public synchronized PassageRequest popRequest() {
+    public synchronized T popRequest() {
         if (requests.isEmpty() && !isEnd) {
             try {
                 this.wait();  // Wait for addRequest
@@ -38,18 +42,18 @@ public class PassageRequestsQueue {
         if (requests.isEmpty()) {
             return null;
         }
-        PassageRequest request = requests.get(0);
+        T request = requests.get(0);
         requests.remove(0);
         this.notify();
         return request;
     }
 
-    public synchronized PassageRequest popRequestWithoutWait() {
+    public synchronized T popRequestWithoutWait() {
         // System.out.println("popRequestWithoutWait");
         if (requests.isEmpty()) {
             return null;
         }
-        PassageRequest request = requests.get(0);
+        T request = requests.get(0);
         requests.remove(0);
         // System.out.println("popRequestWithoutWait" + request);
         this.notify();

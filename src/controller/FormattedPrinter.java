@@ -3,6 +3,7 @@ package controller;
 import com.oocourse.elevator2.TimableOutput;
 import elevator.Elevator;
 import requests.PassageRequest;
+import requests.ResetRequest;
 
 public class FormattedPrinter {
     public static long passengerEnter(PassageRequest request) {
@@ -42,6 +43,18 @@ public class FormattedPrinter {
     public static long receiveRequest(PassageRequest request) {
         return TimableOutput.println(
                 String.format("RECEIVE-%d-%d", request.getPersonId(), request.getElevatorId())
+        );
+    }
+
+    public static long resetBegin(int elevatorId) {
+        return TimableOutput.println(
+                String.format("RESET_BEGIN-%d", elevatorId)
+        );
+    }
+
+    public static long resetEnd(int elevatorId) {
+        return TimableOutput.println(
+                String.format("RESET_END-%d", elevatorId)
         );
     }
 

@@ -1,23 +1,28 @@
 package elevator;
 
+import controller.FormattedPrinter;
 import controller.Strategy;
 import requests.PassageRequest;
-import requests.PassageRequestsQueue;
+import requests.RequestsQueue;
+import requests.ResetRequest;
 
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ElevatorThread extends Thread {
     private final Elevator elevator;
-    private final PassageRequestsQueue requestsQueue;
+    private final RequestsQueue<PassageRequest> requestsQueue;
     private long timeSnippet;
-    private AtomicReference<ElevatorStatus> status;
+    private final AtomicReference<ElevatorStatus> status;
+    private final AtomicReference<ResetRequest> reset;
 
-    public ElevatorThread(int elevatorId, PassageRequestsQueue requestsQueue,
-                          AtomicReference<ElevatorStatus> status) {
+    public ElevatorThread(
+            int elevatorId, RequestsQueue<PassageRequest> requestsQueue,
+            AtomicReference<ElevatorStatus> status, AtomicReference<ResetRequest> reset) {
         super(String.format("Thread-Elevator-%d", elevatorId));
         this.elevator = new Elevator(elevatorId);
         this.requestsQueue = requestsQueue;
         this.status = status;
+        this.reset = reset;
         this.updateStatus();
         this.createTimeSnippet();
     }
@@ -51,7 +56,7 @@ public class ElevatorThread extends Thread {
     private boolean tryGetRequest() {
         synchronized (this.requestsQueue) {
             if (this.requestsQueue.isEnd() && this.requestsQueue.isEmpty()
-                    && elevator.canTerminate()) {
+                    && elevator.canTerminate() && reset.get() == null) {
                 return false;
             }
             PassageRequest request = requestsQueue.popRequestWithoutWait();
@@ -70,11 +75,30 @@ public class ElevatorThread extends Thread {
         return true;
     }
 
+    private void doReset() {
+        FormattedPrinter.resetBegin(elevator.getElevatorId());
+        createTimeSnippet();
+
+        elevator.reset(reset.get());
+        reset.set(null);  // Ensure that reset will not be written twice
+        // TODO Reset unimplemented
+
+        preciselySleep(ElevatorLimits.RESET_DURATION_MS);
+        FormattedPrinter.resetEnd(elevator.getElevatorId());
+        createTimeSnippet();
+
+        this.updateStatus();
+    }
+
     @Override
     public void run() {
 
         // The lock of requestsQueue will not occupy a lot of time, maybe
         while (tryGetRequest()) {
+            if (reset.get() != null) {
+                this.doReset();
+                continue;
+            }
             this.updateStatus();  // Update status of the last loop
             // Maybe strange, and maybe not
             if (elevator.isDoorOpen()) {

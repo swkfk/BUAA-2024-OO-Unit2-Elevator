@@ -3,14 +3,16 @@ package controller;
 import com.oocourse.elevator2.ElevatorInput;
 import com.oocourse.elevator2.PersonRequest;
 import com.oocourse.elevator2.Request;
+import com.oocourse.elevator2.ResetRequest;
+import requests.BaseRequest;
 import requests.PassageRequest;
-import requests.PassageRequestsQueue;
+import requests.RequestsQueue;
 
 public class InputThread extends Thread {
     private final ElevatorInput elevatorInput;
-    private final PassageRequestsQueue waitQueue;
+    private final RequestsQueue<BaseRequest> waitQueue;
 
-    public InputThread(PassageRequestsQueue waitQueue) {
+    public InputThread(RequestsQueue<BaseRequest> waitQueue) {
         super("Thread-Input");
         this.elevatorInput = new ElevatorInput(System.in);
         this.waitQueue = waitQueue;
@@ -27,6 +29,8 @@ public class InputThread extends Thread {
                 } else {
                     if (request instanceof PersonRequest) {
                         waitQueue.addRequest(new PassageRequest((PersonRequest) request));
+                    } else if (request instanceof ResetRequest) {
+                        waitQueue.addRequest(new requests.ResetRequest((ResetRequest) request));
                     }
                 }
             }
