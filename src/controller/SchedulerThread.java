@@ -1,21 +1,26 @@
 package controller;
 
+import elevator.ElevatorStatus;
 import requests.PassageRequest;
 import requests.PassageRequestsQueue;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class SchedulerThread extends Thread {
     private final PassageRequestsQueue waitQueue;
     private final ArrayList<PassageRequestsQueue> passageRequestsQueues;
+    private final ArrayList<AtomicReference<ElevatorStatus>> elevatorStatuses;
     private int passengerId = 0;
 
     public SchedulerThread(
-            PassageRequestsQueue waitQueue, ArrayList<PassageRequestsQueue> passageRequestsQueues
+            PassageRequestsQueue waitQueue, ArrayList<PassageRequestsQueue> passageRequestsQueues,
+            ArrayList<AtomicReference<ElevatorStatus>> elevatorStatuses
     ) {
         super("Thread-Scheduler");
         this.waitQueue = waitQueue;
         this.passageRequestsQueues = passageRequestsQueues;
+        this.elevatorStatuses = elevatorStatuses;
     }
 
     @Override
@@ -43,6 +48,9 @@ public class SchedulerThread extends Thread {
     }
 
     private int doSchedule(PassageRequest request) {
+        for (AtomicReference<ElevatorStatus> status : elevatorStatuses) {
+            System.out.println(status.get());
+        }
         passengerId++;
         return (passengerId % 6) + 1;
     }

@@ -4,21 +4,33 @@ import controller.Strategy;
 import requests.PassageRequest;
 import requests.PassageRequestsQueue;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 public class ElevatorThread extends Thread {
     private final Elevator elevator;
     private final PassageRequestsQueue requestsQueue;
     private long timeSnippet;
+    private AtomicReference<ElevatorStatus> status;
 
-    public ElevatorThread(int elevatorId, PassageRequestsQueue requestsQueue) {
+    public ElevatorThread(int elevatorId, PassageRequestsQueue requestsQueue,
+                          AtomicReference<ElevatorStatus> status) {
         super(String.format("Thread-Elevator-%d", elevatorId));
         this.elevator = new Elevator(elevatorId);
         this.requestsQueue = requestsQueue;
+        this.status = status;
+        this.updateStatus();
         this.createTimeSnippet();
+    }
+
+    private void updateStatus() {
+        // Ensure the status is of the same elevator at the same time
+        this.status.set(new ElevatorStatus(elevator.getFloor(), elevator.isDoorOpen(),
+                elevator.getDirection(), elevator.getRequests(), elevator.getOnboards()));
     }
 
     private void preciselySleep(long durationMS) {
         try {
-            long t = Math.min(durationMS,  timeSnippet + durationMS - System.currentTimeMillis());
+            long t = Math.min(durationMS, timeSnippet + durationMS - System.currentTimeMillis());
             if (t <= 0) {
                 return;
             }
@@ -63,6 +75,7 @@ public class ElevatorThread extends Thread {
 
         // The lock of requestsQueue will not occupy a lot of time, maybe
         while (tryGetRequest()) {
+            this.updateStatus();  // Update status of the last loop
             // Maybe strange, and maybe not
             if (elevator.isDoorOpen()) {
                 elevator.closeDoor();

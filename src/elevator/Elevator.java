@@ -122,4 +122,9 @@ public class Elevator {
     public int getMaxPassenger() {
         return limits.getMaxPassenger();
     }
+
+    public ElevatorStatus getStatus() {
+        // TODO: synchronized here?
+        return new ElevatorStatus(floor, doorOpen, direction, passageRequests, onboardRequests);
+    }
 }
