@@ -32,7 +32,7 @@ public class SchedulerThread extends Thread {
     @Override
     public void run() {
         while (true) {
-            if (waitQueue.isEnd() && waitQueue.isEmpty()) {
+            if (waitQueue.isEnd() && waitQueue.isEmpty() && resetOver()) {
                 for (RequestsQueue<PassageRequest> passageRequestsQueue : passageRequestsQueues) {
                     passageRequestsQueue.setEnd();
                 }
@@ -50,6 +50,7 @@ public class SchedulerThread extends Thread {
                 onResetRequest((ResetRequest) request);
             }
         }
+        System.out.println("SchedulerThread ends");
     }
 
     private void onPassageRequest(PassageRequest request) {
@@ -73,5 +74,23 @@ public class SchedulerThread extends Thread {
         int targetElevatorId = request.getElevatorId();
         elevatorResets.get(targetElevatorId - 1).set(request);
         passageRequestsQueues.get(targetElevatorId - 1).rawNotify();
+    }
+
+    private boolean resetOver() {
+        // If enter here, all inputted requests are processed
+        System.out.println("resetOver");
+        for (AtomicReference<ResetRequest> elevatorReset : elevatorResets) {
+            synchronized (elevatorReset) {
+                if (elevatorReset.get() != null) {
+                    try {
+                        elevatorReset.wait();
+                    } catch (InterruptedException e) {
+                        // e.printStackTrace();
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

@@ -80,7 +80,6 @@ public class ElevatorThread extends Thread {
         createTimeSnippet();
 
         elevator.reset(reset.get());
-        reset.set(null);  // Ensure that reset will not be written twice
         // TODO Reset unimplemented
 
         preciselySleep(ElevatorLimits.RESET_DURATION_MS);
@@ -88,6 +87,10 @@ public class ElevatorThread extends Thread {
         createTimeSnippet();
 
         this.updateStatus();
+        synchronized (reset) {
+            reset.set(null);  // Ensure that reset will not be written twice
+            reset.notify();
+        }
     }
 
     @Override
@@ -154,5 +157,6 @@ public class ElevatorThread extends Thread {
                 preciselySleep(ElevatorLimits.OPENED_DURATION_MS);
             }
         }
+        System.out.printf("ElevatorThread-%d ends%n", elevator.getElevatorId());
     }
 }
