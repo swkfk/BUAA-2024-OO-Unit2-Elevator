@@ -10,6 +10,7 @@ import requests.RequestsQueue;
 import requests.ResetRequest;
 
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Main {
@@ -20,6 +21,7 @@ public class Main {
         ArrayList<RequestsQueue<PassageRequest>> processingQueues = new ArrayList<>();
         ArrayList<AtomicReference<ElevatorStatus>> elevatorStatuses = new ArrayList<>();
         ArrayList<AtomicReference<ResetRequest>> elevatorResets = new ArrayList<>();
+        Semaphore resetSemaphore = new Semaphore(ElevatorLimits.ELEVATOR_COUNT);
 
         for (int i = 0; i < ElevatorLimits.ELEVATOR_COUNT; i++) {
             RequestsQueue<PassageRequest> parallelQueue = new RequestsQueue<>();
@@ -28,12 +30,13 @@ public class Main {
             elevatorStatuses.add(status);
             AtomicReference<ResetRequest> reset = new AtomicReference<>();
             elevatorResets.add(reset);
-            ElevatorThread elevator = new ElevatorThread(i + 1, parallelQueue, status, reset);
+            ElevatorThread elevator = new ElevatorThread(
+                    i + 1, parallelQueue, status, reset, resetSemaphore);
             elevator.start();
         }
 
-        SchedulerThread scheduler =
-                new SchedulerThread(waitQueue, processingQueues, elevatorStatuses, elevatorResets);
+        SchedulerThread scheduler = new SchedulerThread(
+                waitQueue, processingQueues, elevatorStatuses, elevatorResets, resetSemaphore);
         scheduler.start();
 
         InputThread inputThread = new InputThread(waitQueue);

@@ -1,5 +1,6 @@
 package controller;
 
+import elevator.ElevatorLimits;
 import elevator.ElevatorStatus;
 import requests.BaseRequest;
 import requests.PassageRequest;
@@ -7,6 +8,7 @@ import requests.RequestsQueue;
 import requests.ResetRequest;
 
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SchedulerThread extends Thread {
@@ -14,19 +16,22 @@ public class SchedulerThread extends Thread {
     private final ArrayList<RequestsQueue<PassageRequest>> passageRequestsQueues;
     private final ArrayList<AtomicReference<ElevatorStatus>> elevatorStatuses;
     private final ArrayList<AtomicReference<requests.ResetRequest>> elevatorResets;
+    private final Semaphore resetSemaphore;
     private int passengerId = 0;
 
     public SchedulerThread(
             RequestsQueue<BaseRequest> waitQueue,
             ArrayList<RequestsQueue<PassageRequest>> passageRequestsQueues,
             ArrayList<AtomicReference<ElevatorStatus>> elevatorStatuses,
-            ArrayList<AtomicReference<requests.ResetRequest>> elevatorResets
+            ArrayList<AtomicReference<requests.ResetRequest>> elevatorResets,
+            Semaphore resetSemaphore
     ) {
         super("Thread-Scheduler");
         this.waitQueue = waitQueue;
         this.passageRequestsQueues = passageRequestsQueues;
         this.elevatorStatuses = elevatorStatuses;
         this.elevatorResets = elevatorResets;
+        this.resetSemaphore = resetSemaphore;
     }
 
     @Override
@@ -44,11 +49,17 @@ public class SchedulerThread extends Thread {
                 // waitQueue.wait();  // Useless because popRequest will wait
                 continue;
             }
+            try {
+                resetSemaphore.acquire();
+            } catch (InterruptedException e) {
+                // e.printStackTrace();
+            }
             if (request instanceof PassageRequest) {
                 onPassageRequest((PassageRequest) request);
             } else if (request instanceof ResetRequest) {
                 onResetRequest((ResetRequest) request);
             }
+            resetSemaphore.release();
         }
         System.out.println("SchedulerThread ends");
     }
@@ -56,6 +67,7 @@ public class SchedulerThread extends Thread {
     private void onPassageRequest(PassageRequest request) {
         // Do the scheduling
         // FormattedPrinter.passengerEnter(request);
+        // TODO: Check whether in the reset period
         request.setElevatorId(doPassengerSchedule(request));
         FormattedPrinter.receiveRequest(request);
         int targetElevatorId = request.getElevatorId();
@@ -78,7 +90,6 @@ public class SchedulerThread extends Thread {
 
     private boolean resetOver() {
         // If enter here, all inputted requests are processed
-        System.out.println("resetOver");
         for (AtomicReference<ResetRequest> elevatorReset : elevatorResets) {
             synchronized (elevatorReset) {
                 if (elevatorReset.get() != null) {

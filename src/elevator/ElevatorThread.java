@@ -6,6 +6,7 @@ import requests.PassageRequest;
 import requests.RequestsQueue;
 import requests.ResetRequest;
 
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ElevatorThread extends Thread {
@@ -14,15 +15,18 @@ public class ElevatorThread extends Thread {
     private long timeSnippet;
     private final AtomicReference<ElevatorStatus> status;
     private final AtomicReference<ResetRequest> reset;
+    private final Semaphore resetSemaphore;
 
     public ElevatorThread(
             int elevatorId, RequestsQueue<PassageRequest> requestsQueue,
-            AtomicReference<ElevatorStatus> status, AtomicReference<ResetRequest> reset) {
+            AtomicReference<ElevatorStatus> status, AtomicReference<ResetRequest> reset,
+            Semaphore resetSemaphore) {
         super(String.format("Thread-Elevator-%d", elevatorId));
         this.elevator = new Elevator(elevatorId);
         this.requestsQueue = requestsQueue;
         this.status = status;
         this.reset = reset;
+        this.resetSemaphore = resetSemaphore;
         this.updateStatus();
         this.createTimeSnippet();
     }
@@ -76,6 +80,11 @@ public class ElevatorThread extends Thread {
     }
 
     private void doReset() {
+        try {
+            resetSemaphore.acquire();
+        } catch (InterruptedException e) {
+            // e.printStackTrace();
+        }
         FormattedPrinter.resetBegin(elevator.getElevatorId());
         createTimeSnippet();
 
@@ -91,6 +100,7 @@ public class ElevatorThread extends Thread {
             reset.set(null);  // Ensure that reset will not be written twice
             reset.notify();
         }
+        resetSemaphore.release();
     }
 
     @Override
