@@ -68,6 +68,7 @@ public class SchedulerThread extends Thread {
         // Do the scheduling
         // FormattedPrinter.passengerEnter(request);
         // TODO: Check whether in the reset period
+        // System.out.println("Passenger " + request.getPersonId() + " To Schedule");
         request.setElevatorId(doPassengerSchedule(request));
         // FormattedPrinter.receiveRequest(request);
         int targetElevatorId = request.getElevatorId();
@@ -80,15 +81,17 @@ public class SchedulerThread extends Thread {
             System.out.println(status.get());
         }
         */
-        double minTimeDelta = Double.MAX_VALUE;
+        long minTimeDelta = Long.MAX_VALUE;
         int targetElevatorId = 0;
         for (int i = 0; i < ElevatorLimits.ELEVATOR_COUNT; ++i) {
-            double timeDelta = ShadowyCore.calculate(elevatorStatuses.get(i).get(), request);
+            long timeDelta = ShadowyCore.calculate(elevatorStatuses.get(i).get(), request);
+            // System.out.println("Elevator " + (i + 1) + " timeDelta: " + timeDelta);
             if (timeDelta < minTimeDelta) {
                 minTimeDelta = timeDelta;
                 targetElevatorId = i + 1;
             }
         }
+        // System.out.println(request.getPersonId() + " To " + targetElevatorId);
         return targetElevatorId;
     }
 

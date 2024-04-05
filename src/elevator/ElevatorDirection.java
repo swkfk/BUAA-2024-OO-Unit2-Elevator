@@ -9,4 +9,16 @@ public enum ElevatorDirection {
             return DOWN;
         }
     }
+
+    public boolean same(int from, int to) {
+        return this == construct(from, to);
+    }
+
+    public ElevatorDirection reverse() {
+        if (this == UP) {
+            return DOWN;
+        } else {
+            return UP;
+        }
+    }
 }

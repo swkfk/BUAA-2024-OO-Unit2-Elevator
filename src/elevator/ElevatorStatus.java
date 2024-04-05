@@ -9,16 +9,18 @@ public class ElevatorStatus {
     private final int floor;
     private final boolean opened;
     private final ElevatorDirection direction;
+    private final ElevatorLimits limits;
     private final ArrayList<PlainRequest> waitRequests;
     private final ArrayList<PlainRequest> onboardRequests;
 
     public ElevatorStatus(
-            int floor, boolean opened, ElevatorDirection direction,
+            int floor, boolean opened, ElevatorDirection direction, ElevatorLimits limits,
             ArrayList<PassageRequest> waitQueue, ArrayList<PassageRequest> onboardQueue) {
         this.resetStartTime = 0L;
         this.floor = floor;
         this.opened = opened;
         this.direction = direction;
+        this.limits = limits;
         this.waitRequests = new ArrayList<>();
         for (PassageRequest request : waitQueue) {
             waitRequests.add(new PlainRequest(request.getToFloor(), request.getFromFloor()));
@@ -30,9 +32,10 @@ public class ElevatorStatus {
     }
 
     public ElevatorStatus(
-            long timeSnippet, int floor, boolean opened, ElevatorDirection direction,
+            long timeSnippet, int floor, boolean opened,
+            ElevatorDirection direction, ElevatorLimits limits,
             ArrayList<PassageRequest> waitQueue, ArrayList<PassageRequest> onboardQueue) {
-        this(floor, opened, direction, waitQueue, onboardQueue);
+        this(floor, opened, direction, limits, waitQueue, onboardQueue);
         this.resetStartTime = timeSnippet;
     }
 
@@ -41,9 +44,14 @@ public class ElevatorStatus {
         this.floor = self.floor;
         this.opened = self.opened;
         this.direction = self.direction;
+        this.limits = self.limits;
         // Shadow copy, but harmless
         this.waitRequests = new ArrayList<>(self.waitRequests);
         this.onboardRequests = new ArrayList<>(self.onboardRequests);
+    }
+
+    public long getResetStartTime() {
+        return resetStartTime;
     }
 
     public int getFloor() {
@@ -56,6 +64,10 @@ public class ElevatorStatus {
 
     public ElevatorDirection getDirection() {
         return direction;
+    }
+
+    public ElevatorLimits getLimits() {
+        return limits;
     }
 
     public ArrayList<PlainRequest> getWaitRequests() {
@@ -72,7 +84,7 @@ public class ElevatorStatus {
         return newStatus;
     }
 
-    private static class PlainRequest {
+    public static class PlainRequest {
         private final int toFloor;
         private final int fromFloor;
 
