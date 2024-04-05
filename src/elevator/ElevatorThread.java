@@ -92,12 +92,6 @@ public class ElevatorThread extends Thread {
         boolean openedBefore = elevator.isDoorOpen();
         ArrayList<PassageRequest> removed = elevator.reset(reset.get());
         createTimeSnippet();
-        synchronized (this.waitQueue) {
-            for (PassageRequest request : removed) {
-                request.setElevatorId(-1);
-                this.waitQueue.addRequest(request);
-            }
-        }
         if (elevator.isDoorOpen()) {
             if (!openedBefore) {
                 preciselySleep(ElevatorLimits.OPENED_DURATION_MS);
@@ -107,6 +101,13 @@ public class ElevatorThread extends Thread {
 
         FormattedPrinter.resetBegin(elevator.getElevatorId());
         createTimeSnippet();
+
+        synchronized (this.waitQueue) {
+            for (PassageRequest request : removed) {
+                request.setElevatorId(-1);
+                this.waitQueue.addRequest(request);
+            }
+        }
 
         preciselySleep(ElevatorLimits.RESET_DURATION_MS);
 
