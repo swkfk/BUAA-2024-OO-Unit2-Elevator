@@ -67,7 +67,6 @@ public class SchedulerThread extends Thread {
     private void onPassageRequest(PassageRequest request) {
         // Do the scheduling
         // FormattedPrinter.passengerEnter(request);
-        // TODO: Check whether in the reset period
         // System.out.println("Passenger " + request.getPersonId() + " To Schedule");
         request.setElevatorId(doPassengerSchedule(request));
         // FormattedPrinter.receiveRequest(request);
@@ -81,10 +80,14 @@ public class SchedulerThread extends Thread {
             System.out.println(status.get());
         }
         */
+        long timeDelta;
         long minTimeDelta = Long.MAX_VALUE;
         int targetElevatorId = 0;
         for (int i = 0; i < ElevatorLimits.ELEVATOR_COUNT; ++i) {
-            long timeDelta = ShadowyCore.calculate(elevatorStatuses.get(i).get(), request);
+            synchronized (passageRequestsQueues.get(i)) {
+                timeDelta = ShadowyCore.calculate(
+                        elevatorStatuses.get(i).get(), request, passageRequestsQueues.get(i));
+            }
             // System.out.println("Elevator " + (i + 1) + " timeDelta: " + timeDelta);
             if (timeDelta < minTimeDelta) {
                 minTimeDelta = timeDelta;

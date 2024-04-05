@@ -4,15 +4,18 @@ import elevator.ElevatorDirection;
 import elevator.ElevatorLimits;
 import elevator.ElevatorStatus;
 import requests.PassageRequest;
+import requests.RequestsQueue;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ShadowyCore {
-    public static long calculate(ElevatorStatus status, PassageRequest request) {
-        long timeWithoutRequest = calculate(status);
-        long timeWithRequest = calculate(status.withAdditionRequest(request));
-        return timeWithRequest - timeWithoutRequest;
+    public static long calculate(ElevatorStatus status, PassageRequest request,
+                                 RequestsQueue<PassageRequest> waitQueue) {
+        ElevatorStatus newStatus = status.withAdditionRequests(waitQueue.dangerousGetRequests());
+        // System.out.println(newStatus);
+        // long timeWithoutRequest = calculate(newStatus);
+        return calculate(newStatus.withAdditionRequest(request));
     }
 
     private static long calculate(ElevatorStatus status) {

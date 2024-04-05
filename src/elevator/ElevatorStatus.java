@@ -3,6 +3,7 @@ package elevator;
 import requests.PassageRequest;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class ElevatorStatus {
     private long resetStartTime;
@@ -81,6 +82,15 @@ public class ElevatorStatus {
     public ElevatorStatus withAdditionRequest(PassageRequest request) {
         ElevatorStatus newStatus = new ElevatorStatus(this);
         newStatus.waitRequests.add(new PlainRequest(request.getToFloor(), request.getFromFloor()));
+        return newStatus;
+    }
+
+    public ElevatorStatus withAdditionRequests(LinkedList<PassageRequest> requests) {
+        ElevatorStatus newStatus = new ElevatorStatus(this);
+        for (PassageRequest request : requests) {
+            newStatus.waitRequests.add(
+                    new PlainRequest(request.getToFloor(), request.getFromFloor()));
+        }
         return newStatus;
     }
 

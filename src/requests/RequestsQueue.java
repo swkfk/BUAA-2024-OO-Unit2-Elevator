@@ -59,4 +59,8 @@ public class RequestsQueue<T> {
         this.notify();
         return request;
     }
+
+    public LinkedList<T> dangerousGetRequests() {
+        return requests;
+    }
 }
