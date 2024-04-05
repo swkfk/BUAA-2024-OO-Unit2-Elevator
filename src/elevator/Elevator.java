@@ -89,7 +89,7 @@ public class Elevator {
         while (iterator.hasNext()) {
             PassageRequest request = iterator.next();
             if (request.getToFloor() == floor) {
-                FormattedPrinter.passengerLeave(request);
+                FormattedPrinter.passengerLeave(request, floor);
                 iterator.remove();
             }
         }
@@ -103,7 +103,7 @@ public class Elevator {
             if (request.getFromFloor() == floor
                     && onboardRequests.size() < limits.getMaxPassenger()
                     && request.sameDirection(direction)) {
-                FormattedPrinter.passengerEnter(request);
+                FormattedPrinter.passengerEnter(request, floor);
                 onboardRequests.add(request);
                 iterator.remove();
             }
@@ -122,7 +122,7 @@ public class Elevator {
                 doorOpen = true;
             }
             for (PassageRequest request : onboardRequests) {
-                FormattedPrinter.passengerLeave(request);
+                FormattedPrinter.passengerLeave(request, floor);
                 if (request.getToFloor() != floor) {
                     removed.add(request);
                 }
