@@ -3,7 +3,6 @@ package controller;
 import com.oocourse.elevator2.TimableOutput;
 import elevator.Elevator;
 import requests.PassageRequest;
-import requests.ResetRequest;
 
 public class FormattedPrinter {
     public static long passengerEnter(PassageRequest request) {

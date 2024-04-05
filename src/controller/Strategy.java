@@ -1,7 +1,6 @@
 package controller;
 
 import elevator.ElevatorDirection;
-import elevator.ElevatorLimits;
 import requests.PassageRequest;
 
 import java.util.ArrayList;

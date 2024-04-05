@@ -2,16 +2,19 @@ package elevator;
 
 import controller.FormattedPrinter;
 import controller.Strategy;
+import requests.BaseRequest;
 import requests.PassageRequest;
 import requests.RequestsQueue;
 import requests.ResetRequest;
 
+import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ElevatorThread extends Thread {
     private final Elevator elevator;
     private final RequestsQueue<PassageRequest> requestsQueue;
+    private final RequestsQueue<BaseRequest> waitQueue;
     private long timeSnippet;
     private final AtomicReference<ElevatorStatus> status;
     private final AtomicReference<ResetRequest> reset;
@@ -20,10 +23,11 @@ public class ElevatorThread extends Thread {
     public ElevatorThread(
             int elevatorId, RequestsQueue<PassageRequest> requestsQueue,
             AtomicReference<ElevatorStatus> status, AtomicReference<ResetRequest> reset,
-            Semaphore resetSemaphore) {
+            Semaphore resetSemaphore, RequestsQueue<BaseRequest> waitQueue) {
         super(String.format("Thread-Elevator-%d", elevatorId));
         this.elevator = new Elevator(elevatorId);
         this.requestsQueue = requestsQueue;
+        this.waitQueue = waitQueue;
         this.status = status;
         this.reset = reset;
         this.resetSemaphore = resetSemaphore;
@@ -33,8 +37,7 @@ public class ElevatorThread extends Thread {
 
     private void updateStatus() {
         // Ensure the status is of the same elevator at the same time
-        this.status.set(new ElevatorStatus(elevator.getFloor(), elevator.isDoorOpen(),
-                elevator.getDirection(), elevator.getRequests(), elevator.getOnboards()));
+        this.status.set(elevator.getStatus());
     }
 
     private void preciselySleep(long durationMS) {
@@ -88,10 +91,19 @@ public class ElevatorThread extends Thread {
         FormattedPrinter.resetBegin(elevator.getElevatorId());
         createTimeSnippet();
 
-        elevator.reset(reset.get());
-        // TODO Reset unimplemented
+        ArrayList<PassageRequest> removed = elevator.reset(reset.get());
+        synchronized (this.waitQueue) {
+            for (PassageRequest request : removed) {
+                this.waitQueue.addRequest(request);
+            }
+        }
 
         preciselySleep(ElevatorLimits.RESET_DURATION_MS);
+
+        if (elevator.isDoorOpen()) {
+            elevator.closeDoor();  // The requestQueue will only be written by this thread
+        }
+
         FormattedPrinter.resetEnd(elevator.getElevatorId());
         createTimeSnippet();
 
@@ -167,6 +179,6 @@ public class ElevatorThread extends Thread {
                 preciselySleep(ElevatorLimits.OPENED_DURATION_MS);
             }
         }
-        System.out.printf("ElevatorThread-%d ends%n", elevator.getElevatorId());
+        // System.out.printf("ElevatorThread-%d ends%n", elevator.getElevatorId());
     }
 }

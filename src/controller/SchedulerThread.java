@@ -1,6 +1,5 @@
 package controller;
 
-import elevator.ElevatorLimits;
 import elevator.ElevatorStatus;
 import requests.BaseRequest;
 import requests.PassageRequest;
@@ -61,7 +60,7 @@ public class SchedulerThread extends Thread {
             }
             resetSemaphore.release();
         }
-        System.out.println("SchedulerThread ends");
+        // System.out.println("SchedulerThread ends");
     }
 
     private void onPassageRequest(PassageRequest request) {
@@ -75,9 +74,11 @@ public class SchedulerThread extends Thread {
     }
 
     private int doPassengerSchedule(PassageRequest request) {
+        /*
         for (AtomicReference<ElevatorStatus> status : elevatorStatuses) {
             System.out.println(status.get());
         }
+        */
         passengerId++;
         return (passengerId % 6) + 1;
     }

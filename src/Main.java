@@ -31,7 +31,7 @@ public class Main {
             AtomicReference<ResetRequest> reset = new AtomicReference<>();
             elevatorResets.add(reset);
             ElevatorThread elevator = new ElevatorThread(
-                    i + 1, parallelQueue, status, reset, resetSemaphore);
+                    i + 1, parallelQueue, status, reset, resetSemaphore, waitQueue);
             elevator.start();
         }
 

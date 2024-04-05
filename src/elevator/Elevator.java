@@ -112,12 +112,26 @@ public class Elevator {
         FormattedPrinter.elevatorClose(this);
     }
 
-    private void reset(int maxPassenger, double moveDurationSec) {
-        this.limits = new ElevatorLimits(maxPassenger, (long)(moveDurationSec * 1000));
+    private ArrayList<PassageRequest> reset(int maxPassenger, double moveDurationSec) {
+        ArrayList<PassageRequest> removed = new ArrayList<>(passageRequests);
+        passageRequests.clear();
+        if (!onboardRequests.isEmpty()) {
+            FormattedPrinter.elevatorOpen(this);
+            doorOpen = true;
+            for (PassageRequest request : onboardRequests) {
+                FormattedPrinter.passengerLeave(request);
+                if (request.getToFloor() != floor) {
+                    removed.add(request);
+                }
+            }
+            onboardRequests.clear();
+        }
+        this.limits = new ElevatorLimits(maxPassenger, (long) (moveDurationSec * 1000));
+        return removed;
     }
 
-    public void reset(ResetRequest request) {
-        reset(request.getMaxPassenger(), request.getMoveDurationSec());
+    public ArrayList<PassageRequest> reset(ResetRequest request) {
+        return reset(request.getMaxPassenger(), request.getMoveDurationSec());
     }
 
     public long getMoveDurationMs() {
