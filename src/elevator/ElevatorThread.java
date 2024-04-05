@@ -107,6 +107,15 @@ public class ElevatorThread extends Thread {
         createTimeSnippet();
         this.updateStatusWithTimeStamp();
 
+        // Clear the shared request queue between the scheduler and the elevator
+        synchronized (this.requestsQueue) {
+            PassageRequest request = this.requestsQueue.popRequestWithoutWait();
+            while (request != null) {
+                removed.add(request);
+                request = this.requestsQueue.popRequestWithoutWait();
+            }
+        }
+
         synchronized (this.waitQueue) {
             for (PassageRequest request : removed) {
                 request.setElevatorId(-1);
