@@ -74,6 +74,7 @@ public class ElevatorThread extends Thread {
             while (request != null) {
                 // Add request to elevator directly
                 elevator.addRequest(request);
+                this.updateStatus();
                 FormattedPrinter.receiveRequest(request);
                 try {
                     // How dare you! It's strange to wait for 1ms but useful?
