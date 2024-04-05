@@ -105,7 +105,6 @@ public class ElevatorThread extends Thread {
         synchronized (this.waitQueue) {
             for (PassageRequest request : removed) {
                 request.setElevatorId(-1);
-                request.setFromFloor(elevator.getFloor());  // Elevator will not move in reset
                 this.waitQueue.addRequest(request);
             }
         }

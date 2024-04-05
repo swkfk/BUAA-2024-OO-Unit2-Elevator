@@ -124,6 +124,7 @@ public class Elevator {
             for (PassageRequest request : onboardRequests) {
                 FormattedPrinter.passengerLeave(request, floor);
                 if (request.getToFloor() != floor) {
+                    request.setFromFloor(floor);  // Elevator will not move in reset
                     removed.add(request);
                 }
             }
