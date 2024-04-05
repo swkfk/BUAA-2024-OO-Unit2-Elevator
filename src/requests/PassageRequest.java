@@ -4,7 +4,7 @@ import com.oocourse.elevator2.PersonRequest;
 import elevator.ElevatorDirection;
 
 public class PassageRequest extends BaseRequest {
-    private final int fromFloor;
+    private int fromFloor;
     private final int toFloor;
     private final int personId;
     private int elevatorId;
@@ -36,6 +36,10 @@ public class PassageRequest extends BaseRequest {
 
     public void setElevatorId(int elevatorId) {
         this.elevatorId = elevatorId;
+    }
+
+    public void setFromFloor(int fromFloor) {
+        this.fromFloor = fromFloor;
     }
 
     public boolean sameDirection(ElevatorDirection direction) {
