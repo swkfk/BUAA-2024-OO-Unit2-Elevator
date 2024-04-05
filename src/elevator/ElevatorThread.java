@@ -89,27 +89,31 @@ public class ElevatorThread extends Thread {
         } catch (InterruptedException e) {
             // e.printStackTrace();
         }
-        FormattedPrinter.resetBegin(elevator.getElevatorId());
-        createTimeSnippet();
-
+        boolean openedBefore = elevator.isDoorOpen();
         ArrayList<PassageRequest> removed = elevator.reset(reset.get());
+        createTimeSnippet();
         synchronized (this.waitQueue) {
             for (PassageRequest request : removed) {
                 request.setElevatorId(-1);
                 this.waitQueue.addRequest(request);
             }
         }
-
-        preciselySleep(ElevatorLimits.RESET_DURATION_MS);
-
         if (elevator.isDoorOpen()) {
+            if (!openedBefore) {
+                preciselySleep(ElevatorLimits.OPENED_DURATION_MS);
+            }
             elevator.closeDoor();  // The requestQueue will only be written by this thread
         }
+
+        FormattedPrinter.resetBegin(elevator.getElevatorId());
+        createTimeSnippet();
+
+        preciselySleep(ElevatorLimits.RESET_DURATION_MS);
 
         FormattedPrinter.resetEnd(elevator.getElevatorId());
         createTimeSnippet();
 
-        this.updateStatus();
+        this.updateStatus();  // TODO: Modify carefully
         synchronized (reset) {
             reset.set(null);  // Ensure that reset will not be written twice
             reset.notify();

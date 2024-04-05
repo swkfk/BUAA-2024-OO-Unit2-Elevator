@@ -116,8 +116,11 @@ public class Elevator {
         ArrayList<PassageRequest> removed = new ArrayList<>(passageRequests);
         passageRequests.clear();
         if (!onboardRequests.isEmpty()) {
-            FormattedPrinter.elevatorOpen(this);
-            doorOpen = true;
+            if (!doorOpen) {
+                // Unreachable!
+                FormattedPrinter.elevatorOpen(this);
+                doorOpen = true;
+            }
             for (PassageRequest request : onboardRequests) {
                 FormattedPrinter.passengerLeave(request);
                 if (request.getToFloor() != floor) {
