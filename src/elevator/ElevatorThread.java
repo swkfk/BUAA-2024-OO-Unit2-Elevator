@@ -70,6 +70,7 @@ public class ElevatorThread extends Thread {
             while (request != null) {
                 // Add request to elevator directly
                 elevator.addRequest(request);
+                FormattedPrinter.receiveRequest(request);
                 try {
                     // How dare you! It's strange to wait for 1ms but useful?
                     this.requestsQueue.wait(1);
@@ -94,6 +95,7 @@ public class ElevatorThread extends Thread {
         ArrayList<PassageRequest> removed = elevator.reset(reset.get());
         synchronized (this.waitQueue) {
             for (PassageRequest request : removed) {
+                request.setElevatorId(-1);
                 this.waitQueue.addRequest(request);
             }
         }

@@ -68,7 +68,7 @@ public class SchedulerThread extends Thread {
         // FormattedPrinter.passengerEnter(request);
         // TODO: Check whether in the reset period
         request.setElevatorId(doPassengerSchedule(request));
-        FormattedPrinter.receiveRequest(request);
+        // FormattedPrinter.receiveRequest(request);
         int targetElevatorId = request.getElevatorId();
         passageRequestsQueues.get(targetElevatorId - 1).addRequest(request);
     }
