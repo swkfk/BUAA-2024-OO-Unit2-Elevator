@@ -1,5 +1,6 @@
 package controller;
 
+import elevator.ElevatorLimits;
 import elevator.ElevatorStatus;
 import requests.BaseRequest;
 import requests.PassageRequest;
@@ -79,8 +80,16 @@ public class SchedulerThread extends Thread {
             System.out.println(status.get());
         }
         */
-        passengerId++;
-        return (passengerId % 6) + 1;
+        double minTimeDelta = Double.MAX_VALUE;
+        int targetElevatorId = 0;
+        for (int i = 0; i < ElevatorLimits.ELEVATOR_COUNT; ++i) {
+            double timeDelta = ShadowyCore.calculate(elevatorStatuses.get(i).get(), request);
+            if (timeDelta < minTimeDelta) {
+                minTimeDelta = timeDelta;
+                targetElevatorId = i + 1;
+            }
+        }
+        return targetElevatorId;
     }
 
     private void onResetRequest(ResetRequest request) {

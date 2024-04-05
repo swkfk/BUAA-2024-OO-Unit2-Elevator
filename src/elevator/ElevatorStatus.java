@@ -5,6 +5,7 @@ import requests.PassageRequest;
 import java.util.ArrayList;
 
 public class ElevatorStatus {
+    private long resetStartTime;
     private final int floor;
     private final boolean opened;
     private final ElevatorDirection direction;
@@ -14,6 +15,7 @@ public class ElevatorStatus {
     public ElevatorStatus(
             int floor, boolean opened, ElevatorDirection direction,
             ArrayList<PassageRequest> waitQueue, ArrayList<PassageRequest> onboardQueue) {
+        this.resetStartTime = 0L;
         this.floor = floor;
         this.opened = opened;
         this.direction = direction;
@@ -25,6 +27,23 @@ public class ElevatorStatus {
         for (PassageRequest request : onboardQueue) {
             onboardRequests.add(new PlainRequest(request.getToFloor(), request.getFromFloor()));
         }
+    }
+
+    public ElevatorStatus(
+            long timeSnippet, int floor, boolean opened, ElevatorDirection direction,
+            ArrayList<PassageRequest> waitQueue, ArrayList<PassageRequest> onboardQueue) {
+        this(floor, opened, direction, waitQueue, onboardQueue);
+        this.resetStartTime = timeSnippet;
+    }
+
+    public ElevatorStatus(ElevatorStatus self) {
+        this.resetStartTime = self.resetStartTime;
+        this.floor = self.floor;
+        this.opened = self.opened;
+        this.direction = self.direction;
+        // Shadow copy, but harmless
+        this.waitRequests = new ArrayList<>(self.waitRequests);
+        this.onboardRequests = new ArrayList<>(self.onboardRequests);
     }
 
     public int getFloor() {
@@ -45,6 +64,12 @@ public class ElevatorStatus {
 
     public ArrayList<PlainRequest> getOnboardRequests() {
         return onboardRequests;
+    }
+
+    public ElevatorStatus withAdditionRequest(PassageRequest request) {
+        ElevatorStatus newStatus = new ElevatorStatus(this);
+        newStatus.waitRequests.add(new PlainRequest(request.getToFloor(), request.getFromFloor()));
+        return newStatus;
     }
 
     private static class PlainRequest {

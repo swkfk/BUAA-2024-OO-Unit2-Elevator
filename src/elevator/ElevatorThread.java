@@ -40,6 +40,10 @@ public class ElevatorThread extends Thread {
         this.status.set(elevator.getStatus());
     }
 
+    private void updateStatusWithTimeStamp() {
+        this.status.set(elevator.getStatus(this.timeSnippet));
+    }
+
     private void preciselySleep(long durationMS) {
         try {
             long t = Math.min(durationMS, timeSnippet + durationMS - System.currentTimeMillis());
@@ -101,6 +105,7 @@ public class ElevatorThread extends Thread {
 
         FormattedPrinter.resetBegin(elevator.getElevatorId());
         createTimeSnippet();
+        this.updateStatusWithTimeStamp();
 
         synchronized (this.waitQueue) {
             for (PassageRequest request : removed) {
@@ -113,8 +118,8 @@ public class ElevatorThread extends Thread {
 
         FormattedPrinter.resetEnd(elevator.getElevatorId());
         createTimeSnippet();
+        this.updateStatus();
 
-        this.updateStatus();  // TODO: Modify carefully
         synchronized (reset) {
             reset.set(null);  // Ensure that reset will not be written twice
             reset.notify();
