@@ -101,10 +101,10 @@ public class SchedulerThread extends Thread {
                         long[] ret = ShadowyCore.calculate(
                                 elevatorStatuses.get(i).get(), passageRequestsQueues.get(i),
                                 elevatorStatuses.get(i - 6).get(), passageRequestsQueues.get(i - 6),
-                                request, i
+                                request, i - 6
                         );
                         timeDelta = ret[0];
-                        targetElevatorIdToChoose = (int) ret[1];
+                        targetElevatorIdToChoose = (int) ret[1] + 1;
                     }
                 }
             }

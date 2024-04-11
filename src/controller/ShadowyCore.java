@@ -13,8 +13,24 @@ public class ShadowyCore {
     public static long[] calculate(
             ElevatorStatus statusMain, RequestsQueue<PassageRequest> waitQueueMain,
             ElevatorStatus statusBuddy, RequestsQueue<PassageRequest> waitQueueBuddy,
-            PassageRequest request, int buddyId) {
-        return new long[]{1L, 1L};
+            PassageRequest request, int upId) {
+        int downId = upId + 6;
+        int targetId;
+        int transferFloor = statusMain.getLimits().getTransferFloor();
+        if (transferFloor == request.getFromFloor()) {
+            if (request.getToFloor() < transferFloor) {
+                targetId = downId;
+            } else {
+                targetId = upId;
+            }
+        } else {
+            if (request.getFromFloor() < transferFloor) {
+                targetId = downId;
+            } else {
+                targetId = upId;
+            }
+        }
+        return new long[]{1L, targetId};
     }
 
     public static long calculate(ElevatorStatus status, PassageRequest request,
