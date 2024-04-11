@@ -23,16 +23,27 @@ public class Main {
         ArrayList<AtomicReference<ResetRequest>> elevatorResets = new ArrayList<>();
         Semaphore resetSemaphore = new Semaphore(ElevatorLimits.ELEVATOR_COUNT);
 
+        ArrayList<ElevatorThread> elevatorBackupThreads = new ArrayList<>();
         for (int i = 0; i < ElevatorLimits.ELEVATOR_COUNT; i++) {
-            RequestsQueue<PassageRequest> parallelQueue = new RequestsQueue<>();
-            processingQueues.add(parallelQueue);
+            RequestsQueue<PassageRequest> queue = new RequestsQueue<>();
+            processingQueues.add(queue);
+            AtomicReference<ElevatorStatus> status = new AtomicReference<>();
+            elevatorStatuses.add(status);
+            ElevatorThread elevatorBackup = new ElevatorThread(i + 1, queue, status, waitQueue);
+            elevatorBackupThreads.add(elevatorBackup);
+        }
+
+        for (int i = 0; i < ElevatorLimits.ELEVATOR_COUNT; i++) {
+            RequestsQueue<PassageRequest> queue = new RequestsQueue<>();
+            processingQueues.add(queue);
             AtomicReference<ElevatorStatus> status = new AtomicReference<>();
             elevatorStatuses.add(status);
             AtomicReference<ResetRequest> reset = new AtomicReference<>();
             elevatorResets.add(reset);
-            ElevatorThread elevator = new ElevatorThread(
-                    i + 1, parallelQueue, status, reset, resetSemaphore, waitQueue);
-            elevator.start();
+            ElevatorThread elevatorMain = new ElevatorThread(
+                    i + 1, queue, status, reset,
+                    resetSemaphore, waitQueue, elevatorBackupThreads.get(i));
+            elevatorMain.start();
         }
 
         SchedulerThread scheduler = new SchedulerThread(

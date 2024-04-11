@@ -19,18 +19,36 @@ public class ElevatorThread extends Thread {
     private final AtomicReference<ElevatorStatus> status;
     private final AtomicReference<ResetRequest> reset;
     private final Semaphore resetSemaphore;
+    private final ElevatorThread buddy;
 
     public ElevatorThread(
             int elevatorId, RequestsQueue<PassageRequest> requestsQueue,
             AtomicReference<ElevatorStatus> status, AtomicReference<ResetRequest> reset,
-            Semaphore resetSemaphore, RequestsQueue<BaseRequest> waitQueue) {
-        super(String.format("Thread-Elevator-%d", elevatorId));
-        this.elevator = new Elevator(elevatorId);
+            Semaphore resetSemaphore, RequestsQueue<BaseRequest> waitQueue,
+            ElevatorThread elevatorThread) {
+        super(String.format("Thread-Elevator-%d-A", elevatorId));
+        this.elevator = new Elevator(elevatorId, "" + elevatorId);
         this.requestsQueue = requestsQueue;
         this.waitQueue = waitQueue;
         this.status = status;
         this.reset = reset;
         this.resetSemaphore = resetSemaphore;
+        this.buddy = elevatorThread;
+        this.updateStatus();
+        this.createTimeSnippet();
+    }
+
+    public ElevatorThread(
+            int elevatorId, RequestsQueue<PassageRequest> requestsQueue,
+            AtomicReference<ElevatorStatus> status, RequestsQueue<BaseRequest> waitQueue) {
+        super(String.format("Thread-Elevator-%d-B", elevatorId));
+        this.elevator = new Elevator(elevatorId, elevatorId + "-B");
+        this.requestsQueue = requestsQueue;
+        this.waitQueue = waitQueue;
+        this.status = status;
+        this.reset = null;
+        this.resetSemaphore = null;
+        this.buddy = null;
         this.updateStatus();
         this.createTimeSnippet();
     }
@@ -135,6 +153,10 @@ public class ElevatorThread extends Thread {
             reset.notify();
         }
         resetSemaphore.release();
+    }
+
+    public void setElevatorFloor(int min, int max, int floor) {
+        elevator.setLimitFloor(min, max, floor);
     }
 
     @Override

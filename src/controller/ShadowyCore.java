@@ -69,9 +69,9 @@ public class ShadowyCore {
                 globalTime += ElevatorLimits.OPENED_DURATION_MS;
                 enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
             } else {
-                if (floor == ElevatorLimits.MIN_FLOOR) {
+                if (floor == limits.getMinFloor()) {
                     direction = ElevatorDirection.UP;
-                } else if (floor == ElevatorLimits.MAX_FLOOR) {
+                } else if (floor == limits.getMaxFloor()) {
                     direction = ElevatorDirection.DOWN;
                 }
                 globalTime += moveDurationMs;

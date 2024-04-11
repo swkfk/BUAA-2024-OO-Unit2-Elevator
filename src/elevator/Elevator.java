@@ -16,15 +16,25 @@ public class Elevator {
 
     private final ArrayList<PassageRequest> onboardRequests;
     private ElevatorLimits limits;
+    private String outputName;
 
-    public Elevator(int elevatorId) {
+    public Elevator(int elevatorId, String name) {
         this.elevatorId = elevatorId;
         this.doorOpen = false;
         this.direction = ElevatorDirection.UP;
-        this.floor = ElevatorLimits.MIN_FLOOR;
+        this.floor = 1;
         this.passageRequests = new ArrayList<>();
         this.onboardRequests = new ArrayList<>();
         this.limits = new ElevatorLimits();
+        this.outputName = name;
+    }
+
+    public void setOutputNameToA() {
+        this.outputName += "-A";
+    }
+
+    public String getOutputName() {
+        return outputName;
     }
 
     public boolean canTerminate() {
@@ -33,6 +43,11 @@ public class Elevator {
 
     public int getElevatorId() {
         return elevatorId;
+    }
+
+    public void setLimitFloor(int min, int max, int floor) {
+        this.floor = floor;
+        this.limits.setLimitFloor(min, max);
     }
 
     public int getFloor() {

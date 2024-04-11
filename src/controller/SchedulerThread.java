@@ -83,7 +83,7 @@ public class SchedulerThread extends Thread {
         long timeDelta;
         long minTimeDelta = Long.MAX_VALUE;
         int targetElevatorId = 0;
-        for (int i = 0; i < ElevatorLimits.ELEVATOR_COUNT; ++i) {
+        for (int i = ElevatorLimits.ELEVATOR_COUNT; i < ElevatorLimits.ELEVATOR_COUNT * 2; ++i) {
             synchronized (passageRequestsQueues.get(i)) {
                 timeDelta = ShadowyCore.calculate(
                         elevatorStatuses.get(i).get(), request, passageRequestsQueues.get(i));
@@ -101,7 +101,7 @@ public class SchedulerThread extends Thread {
     private void onResetRequest(ResetRequest request) {
         int targetElevatorId = request.getElevatorId();
         elevatorResets.get(targetElevatorId - 1).set(request);
-        passageRequestsQueues.get(targetElevatorId - 1).rawNotify();
+        passageRequestsQueues.get(targetElevatorId - 1 + 6).rawNotify();
     }
 
     private boolean resetOver() {
