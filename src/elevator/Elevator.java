@@ -8,6 +8,7 @@ import requests.ResetRequest;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Elevator {
     private final int elevatorId;
@@ -19,8 +20,9 @@ public class Elevator {
     private final ArrayList<PassageRequest> onboardRequests;
     private ElevatorLimits limits;
     private String outputName;
+    private ReentrantLock lock;
 
-    public Elevator(int elevatorId, String name) {
+    public Elevator(int elevatorId, String name, ReentrantLock lock) {
         this.elevatorId = elevatorId;
         this.doorOpen = false;
         this.direction = ElevatorDirection.UP;
@@ -29,6 +31,7 @@ public class Elevator {
         this.onboardRequests = new ArrayList<>();
         this.limits = new ElevatorLimits();
         this.outputName = name;
+        this.lock = lock;
     }
 
     public void setOutputNameToA() {
@@ -74,12 +77,22 @@ public class Elevator {
     }
 
     public void move() {
+        int originalFloor = floor;
         if (direction == ElevatorDirection.UP) {
+            if (floor + 1 == limits.getTransferFloor()) {
+                lock.lock();
+            }
             floor++;
         } else {
+            if (floor - 1 == limits.getTransferFloor()) {
+                lock.lock();
+            }
             floor--;
         }
         FormattedPrinter.elevatorArrive(this);
+        if (originalFloor == limits.getTransferFloor()) {
+            lock.unlock();
+        }
     }
 
     public void moveReversely() {

@@ -10,6 +10,7 @@ import requests.ResetRequest;
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ElevatorThread extends Thread {
     private final Elevator elevator;
@@ -25,9 +26,9 @@ public class ElevatorThread extends Thread {
             int elevatorId, RequestsQueue<PassageRequest> requestsQueue,
             AtomicReference<ElevatorStatus> status, AtomicReference<ResetRequest> reset,
             Semaphore resetSemaphore, RequestsQueue<BaseRequest> waitQueue,
-            ElevatorThread elevatorThread) {
+            ElevatorThread elevatorThread, ReentrantLock lock) {
         super(String.format("Thread-Elevator-%d-A", elevatorId));
-        this.elevator = new Elevator(elevatorId, "" + elevatorId);
+        this.elevator = new Elevator(elevatorId, "" + elevatorId, lock);
         this.requestsQueue = requestsQueue;
         this.waitQueue = waitQueue;
         this.status = status;
@@ -40,9 +41,10 @@ public class ElevatorThread extends Thread {
 
     public ElevatorThread(
             int elevatorId, RequestsQueue<PassageRequest> requestsQueue,
-            AtomicReference<ElevatorStatus> status, RequestsQueue<BaseRequest> waitQueue) {
+            AtomicReference<ElevatorStatus> status, RequestsQueue<BaseRequest> waitQueue,
+            ReentrantLock lock) {
         super(String.format("Thread-Elevator-%d-B", elevatorId));
-        this.elevator = new Elevator(elevatorId, elevatorId + "-B");
+        this.elevator = new Elevator(elevatorId, elevatorId + "-B", lock);
         this.requestsQueue = requestsQueue;
         this.waitQueue = waitQueue;
         this.status = status;
