@@ -17,7 +17,6 @@ public class SchedulerThread extends Thread {
     private final ArrayList<AtomicReference<ElevatorStatus>> elevatorStatuses;
     private final ArrayList<AtomicReference<requests.ResetRequest>> elevatorResets;
     private final Semaphore resetSemaphore;
-    private int passengerId = 0;
 
     public SchedulerThread(
             RequestsQueue<BaseRequest> waitQueue,
