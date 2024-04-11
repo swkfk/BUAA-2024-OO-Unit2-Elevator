@@ -1,6 +1,6 @@
 package requests;
 
-import com.oocourse.elevator2.PersonRequest;
+import com.oocourse.elevator3.PersonRequest;
 import elevator.ElevatorDirection;
 
 public class PassageRequest extends BaseRequest {

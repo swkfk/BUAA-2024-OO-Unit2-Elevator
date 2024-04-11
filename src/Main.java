@@ -1,4 +1,4 @@
-import com.oocourse.elevator2.TimableOutput;
+import com.oocourse.elevator3.TimableOutput;
 import controller.InputThread;
 import controller.SchedulerThread;
 import elevator.ElevatorLimits;

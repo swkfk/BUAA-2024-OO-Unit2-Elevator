@@ -11,7 +11,7 @@ public class ResetRequest extends BaseRequest {
         this.moveDurationSec = moveDurationS;
     }
 
-    public ResetRequest(com.oocourse.elevator2.ResetRequest resetRequest) {
+    public ResetRequest(com.oocourse.elevator3.NormalResetRequest resetRequest) {
         this(resetRequest.getElevatorId(), resetRequest.getCapacity(), resetRequest.getSpeed());
     }
 

@@ -1,6 +1,6 @@
 package controller;
 
-import com.oocourse.elevator2.TimableOutput;
+import com.oocourse.elevator3.TimableOutput;
 import elevator.Elevator;
 import requests.PassageRequest;
 
