@@ -33,6 +33,7 @@ public class Main {
             elevatorBackupThreads.add(elevatorBackup);
         }
 
+        ArrayList<ElevatorThread> elevatorMainThreads = new ArrayList<>();
         for (int i = 0; i < ElevatorLimits.ELEVATOR_COUNT; i++) {
             RequestsQueue<PassageRequest> queue = new RequestsQueue<>();
             processingQueues.add(queue);
@@ -43,12 +44,13 @@ public class Main {
             ElevatorThread elevatorMain = new ElevatorThread(
                     i + 1, queue, status, reset,
                     resetSemaphore, waitQueue, elevatorBackupThreads.get(i));
+            elevatorMainThreads.add(elevatorMain);
             elevatorMain.start();
         }
 
         SchedulerThread scheduler = new SchedulerThread(
                 waitQueue, processingQueues, elevatorStatuses,
-                elevatorResets, elevatorBackupThreads, resetSemaphore);
+                elevatorResets, elevatorBackupThreads, elevatorMainThreads, resetSemaphore);
         scheduler.start();
 
         InputThread inputThread = new InputThread(waitQueue);

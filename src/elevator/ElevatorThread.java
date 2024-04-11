@@ -215,7 +215,7 @@ public class ElevatorThread extends Thread {
                 elevator.move();  // Output first
                 createTimeSnippet();  // Then record the time
             } else if (strategyType == Strategy.ElevatorStrategyType.OPEN) {
-                createTimeSnippet(elevator.openDoor());
+                createTimeSnippet(elevator.openDoor(waitQueue));
                 preciselySleep(ElevatorLimits.OPENED_DURATION_MS);
                 createTimeSnippet();
             } else if (strategyType == Strategy.ElevatorStrategyType.REVISE_MOVE) {
@@ -229,7 +229,7 @@ public class ElevatorThread extends Thread {
                 createTimeSnippet();
             } else if (strategyType == Strategy.ElevatorStrategyType.REVISE_OPEN) {
                 elevator.reverse();
-                createTimeSnippet(elevator.openDoor());
+                createTimeSnippet(elevator.openDoor(waitQueue));
                 preciselySleep(ElevatorLimits.OPENED_DURATION_MS);
             }
         }

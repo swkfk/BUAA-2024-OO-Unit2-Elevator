@@ -36,6 +36,10 @@ public class ElevatorLimits {
         return newLimits;
     }
 
+    public boolean reachable(int floor) {
+        return minFloor <= floor && floor <= maxFloor;
+    }
+
     public int getMinFloor() {
         return minFloor;
     }

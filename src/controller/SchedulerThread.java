@@ -18,6 +18,7 @@ public class SchedulerThread extends Thread {
     private final ArrayList<AtomicReference<ElevatorStatus>> elevatorStatuses;  // len == 12
     private final ArrayList<AtomicReference<requests.ResetRequest>> elevatorResets;  // len == 6
     private final ArrayList<ElevatorThread> buddyThreads;  // len == 6
+    private final ArrayList<ElevatorThread> threads;  // len == 6
     private final Semaphore resetSemaphore;
 
     public SchedulerThread(
@@ -26,6 +27,7 @@ public class SchedulerThread extends Thread {
             ArrayList<AtomicReference<ElevatorStatus>> elevatorStatuses,
             ArrayList<AtomicReference<requests.ResetRequest>> elevatorResets,
             ArrayList<ElevatorThread> buddyThreads,
+            ArrayList<ElevatorThread> mainThreads,
             Semaphore resetSemaphore
     ) {
         super("Thread-Scheduler");
@@ -34,13 +36,15 @@ public class SchedulerThread extends Thread {
         this.elevatorStatuses = elevatorStatuses;
         this.elevatorResets = elevatorResets;
         this.buddyThreads = buddyThreads;
+        this.threads = new ArrayList<>(buddyThreads);
+        this.threads.addAll(mainThreads);
         this.resetSemaphore = resetSemaphore;
     }
 
     @Override
     public void run() {
         while (true) {
-            if (waitQueue.isEnd() && waitQueue.isEmpty() && resetOver()) {
+            if (waitQueue.isEnd() && waitQueue.isEmpty() && resetOver() && elevatorOver()) {
                 for (RequestsQueue<PassageRequest> passageRequestsQueue : passageRequestsQueues) {
                     passageRequestsQueue.setEnd();
                 }
@@ -136,6 +140,16 @@ public class SchedulerThread extends Thread {
                     }
                     return false;
                 }
+            }
+        }
+        return true;
+    }
+
+    private boolean elevatorOver() {
+        for (ElevatorThread elevatorThread : threads) {
+            if (elevatorThread.getState() != State.WAITING
+                    && elevatorThread.getState() != State.NEW) {
+                return false;
             }
         }
         return true;

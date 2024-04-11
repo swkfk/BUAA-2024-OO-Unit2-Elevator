@@ -1,7 +1,9 @@
 package elevator;
 
 import controller.FormattedPrinter;
+import requests.BaseRequest;
 import requests.PassageRequest;
+import requests.RequestsQueue;
 import requests.ResetRequest;
 
 import java.util.ArrayList;
@@ -97,7 +99,7 @@ public class Elevator {
         return doorOpen;
     }
 
-    public long openDoor() {
+    public long openDoor(RequestsQueue<BaseRequest> waitQueue) {
         FormattedPrinter.elevatorOpen(this);
         final long t = System.currentTimeMillis();
         doorOpen = true;
@@ -108,13 +110,18 @@ public class Elevator {
         Iterator<PassageRequest> iterator = onboardRequests.iterator();
         while (iterator.hasNext()) {
             PassageRequest request = iterator.next();
-            if (floor == limits.getTransferFloor() &&
-                    (request.getToFloor() > floor || request.getToFloor() < floor)) {
+            if (request.getToFloor() == floor) {
+                // Arrive the destination
                 FormattedPrinter.passengerLeave(request, floor, this);
                 iterator.remove();
-            } else if (request.getToFloor() == floor) {
-                FormattedPrinter.passengerLeave(request, floor, this);
-                iterator.remove();
+            } else if (floor == limits.getTransferFloor()) {
+                // Reach the transfer floor
+                if (!limits.reachable(request.getToFloor())) {
+                    // Not this elevator's zone
+                    FormattedPrinter.passengerLeave(request, floor, this);
+                    waitQueue.addRequest(request);
+                    iterator.remove();
+                }
             }
         }
         return t;
