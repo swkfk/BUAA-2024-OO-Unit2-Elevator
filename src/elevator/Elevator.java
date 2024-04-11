@@ -47,7 +47,7 @@ public class Elevator {
 
     public void setLimitFloor(int min, int max, int floor) {
         this.floor = floor;
-        this.limits.setLimitFloor(min, max);
+        this.limits = this.limits.setLimitFloor(min, max);
         direction = limits.getZoneDirection();
     }
 

@@ -22,16 +22,18 @@ public class ElevatorLimits {
         this.moveDurationMs = moveDurationMs;
     }
 
-    public void setLimitFloor(int minFloor, int maxFloor) {
-        this.minFloor = minFloor;
-        this.maxFloor = maxFloor;
+    public ElevatorLimits setLimitFloor(int minFloor, int maxFloor) {
+        ElevatorLimits newLimits = new ElevatorLimits(maxPassenger, moveDurationMs);
+        newLimits.minFloor = minFloor;
+        newLimits.maxFloor = maxFloor;
         if (minFloor == 1) {
-            transferFloor = maxFloor;
-            zoneDirection = ElevatorDirection.DOWN;
+            newLimits.transferFloor = maxFloor;
+            newLimits.zoneDirection = ElevatorDirection.DOWN;
         } else if (maxFloor == 11) {
-            transferFloor = minFloor;
-            zoneDirection = ElevatorDirection.UP;
+            newLimits.transferFloor = minFloor;
+            newLimits.zoneDirection = ElevatorDirection.UP;
         }
+        return newLimits;
     }
 
     public int getMinFloor() {
