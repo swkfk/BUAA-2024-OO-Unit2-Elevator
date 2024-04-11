@@ -119,6 +119,7 @@ public class Elevator {
                 if (!limits.reachable(request.getToFloor())) {
                     // Not this elevator's zone
                     FormattedPrinter.passengerLeave(request, floor, this);
+                    request.setFromFloor(floor);
                     waitQueue.addRequest(request);
                     iterator.remove();
                 }

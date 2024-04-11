@@ -30,6 +30,12 @@ public class ShadowyCore {
                 targetId = upId;
             }
         }
+        // System.out.println("Up ID: " + upId);
+        // System.out.println("Down ID: " + downId);
+        // System.out.println("Transfer Floor: " + transferFloor);
+        // System.out.println("From: " + request.getFromFloor());
+        // System.out.println("To: " + request.getToFloor());
+        // System.out.println("Target ID: " + targetId);
         return new long[]{1L, targetId};
     }
 
