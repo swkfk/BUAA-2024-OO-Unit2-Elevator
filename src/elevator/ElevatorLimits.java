@@ -5,6 +5,7 @@ public class ElevatorLimits {
     public static final int ELEVATOR_COUNT = 6;
     private int minFloor = 1;
     private int maxFloor = 11;
+    private int transferFloor = -1;
     private long moveDurationMs = 400;
     public static final long OPEN_DURATION_MS = 200;
     public static final long CLOSE_DURATION_MS = 200;
@@ -23,6 +24,11 @@ public class ElevatorLimits {
     public void setLimitFloor(int minFloor, int maxFloor) {
         this.minFloor = minFloor;
         this.maxFloor = maxFloor;
+        if (minFloor == 1) {
+            transferFloor = maxFloor;
+        } else if (maxFloor == 11) {
+            transferFloor = minFloor;
+        }
     }
 
     public int getMinFloor() {
@@ -31,6 +37,10 @@ public class ElevatorLimits {
 
     public int getMaxFloor() {
         return maxFloor;
+    }
+
+    public int getTransferFloor() {
+        return transferFloor;
     }
 
     public int getMaxPassenger() {
