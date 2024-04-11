@@ -99,7 +99,8 @@ public class SchedulerThread extends Thread {
                         timeDelta = ShadowyCore.calculate(
                                 elevatorStatuses.get(i).get(), request, passageRequestsQueues.get(i)
                         );
-                        targetElevatorIdToChoose = i - 6 + 1;
+                        targetElevatorIdToChoose = i + 1;
+                        // System.out.println("S: timeDelta: " + timeDelta + " targetElevatorIdToChoose: " + targetElevatorIdToChoose);
                     } else {
                         // Have buddy thread
                         long[] ret = ShadowyCore.calculate(
@@ -109,6 +110,7 @@ public class SchedulerThread extends Thread {
                         );
                         timeDelta = ret[0];
                         targetElevatorIdToChoose = (int) ret[1] + 1;
+                        // System.out.println("D: timeDelta: " + timeDelta + " targetElevatorIdToChoose: " + targetElevatorIdToChoose);
                     }
                 }
             }
@@ -146,6 +148,11 @@ public class SchedulerThread extends Thread {
     }
 
     private boolean elevatorOver() {
+        for (RequestsQueue<PassageRequest> passageRequestsQueue : passageRequestsQueues) {
+            if (!passageRequestsQueue.isEmpty()) {
+                return false;
+            }
+        }
         for (ElevatorThread elevatorThread : threads) {
             if (elevatorThread.getState() != State.WAITING
                     && elevatorThread.getState() != State.NEW) {
