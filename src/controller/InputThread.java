@@ -1,12 +1,14 @@
 package controller;
 
 import com.oocourse.elevator3.ElevatorInput;
+import com.oocourse.elevator3.Request;
 import com.oocourse.elevator3.PersonRequest;
 import com.oocourse.elevator3.NormalResetRequest;
-import com.oocourse.elevator3.Request;
+import com.oocourse.elevator3.DoubleCarResetRequest;
 import requests.BaseRequest;
 import requests.PassageRequest;
 import requests.RequestsQueue;
+import requests.ResetRequest;
 
 public class InputThread extends Thread {
     private final ElevatorInput elevatorInput;
@@ -30,7 +32,9 @@ public class InputThread extends Thread {
                     if (request instanceof PersonRequest) {
                         waitQueue.addRequest(new PassageRequest((PersonRequest) request));
                     } else if (request instanceof NormalResetRequest) {
-                        waitQueue.addRequest(new requests.ResetRequest((NormalResetRequest) request));
+                        waitQueue.addRequest(new ResetRequest((NormalResetRequest) request));
+                    } else if (request instanceof DoubleCarResetRequest) {
+                        waitQueue.addRequest(new ResetRequest((DoubleCarResetRequest) request));
                     }
                 }
             }

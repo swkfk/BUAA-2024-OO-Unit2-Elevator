@@ -85,7 +85,7 @@ public class ElevatorThread extends Thread {
     private boolean tryGetRequest() {
         synchronized (this.requestsQueue) {
             if (this.requestsQueue.isEnd() && this.requestsQueue.isEmpty()
-                    && elevator.canTerminate() && reset.get() == null) {
+                    && elevator.canTerminate() && (reset == null || reset.get() == null)) {
                 return false;
             }
             PassageRequest request = requestsQueue.popRequestWithoutWait();
@@ -113,7 +113,12 @@ public class ElevatorThread extends Thread {
             // e.printStackTrace();
         }
         boolean openedBefore = elevator.isDoorOpen();
-        ArrayList<PassageRequest> removed = elevator.reset(reset.get());
+
+        ResetRequest resetRequest = this.reset.get();
+        ArrayList<PassageRequest> removed = elevator.reset(resetRequest);
+
+        int transferFloor = resetRequest.getTransferFloor();
+
         createTimeSnippet();
         if (elevator.isDoorOpen()) {
             if (!openedBefore) {
@@ -146,6 +151,15 @@ public class ElevatorThread extends Thread {
 
         FormattedPrinter.resetEnd(elevator.getElevatorId());
         createTimeSnippet();
+
+        if (transferFloor > 0) {
+            // Double car reset
+            this.elevator.setOutputNameToA();
+            this.setElevatorFloor(1, transferFloor, transferFloor - 1);
+            buddy.setElevatorFloor(transferFloor, 11, transferFloor + 1);
+            buddy.start();
+        }
+
         this.updateStatus();
 
         synchronized (reset) {
@@ -164,7 +178,7 @@ public class ElevatorThread extends Thread {
 
         // The lock of requestsQueue will not occupy a lot of time, maybe
         while (tryGetRequest()) {
-            if (reset.get() != null) {
+            if (reset != null && reset.get() != null) {
                 this.doReset();
                 continue;
             }
@@ -176,10 +190,7 @@ public class ElevatorThread extends Thread {
                 continue;
             }
             // Handle the exist request or run the elevator
-            Strategy.ElevatorStrategyType strategyType = Strategy.elevatorStrategy(
-                    elevator.getRequests(), elevator.getOnboards(),
-                    elevator.getFloor(), elevator.getDirection(), elevator.getMaxPassenger()
-            );
+            Strategy.ElevatorStrategyType strategyType = Strategy.elevatorStrategy(elevator);
             // FormattedPrinter.debug(strategyType);
             if (strategyType == Strategy.ElevatorStrategyType.WAIT) {
                 synchronized (this.requestsQueue) {
@@ -192,10 +203,7 @@ public class ElevatorThread extends Thread {
             } else if (strategyType == Strategy.ElevatorStrategyType.MOVE) {
                 preciselySleep(elevator.getMoveDurationMs());
                 tryGetRequest();
-                strategyType = Strategy.elevatorStrategy(
-                        elevator.getRequests(), elevator.getOnboards(),
-                        elevator.getFloor(), elevator.getDirection(), elevator.getMaxPassenger()
-                );
+                strategyType = Strategy.elevatorStrategy(elevator);
                 if (strategyType == Strategy.ElevatorStrategyType.OPEN) {
                     continue;
                 }
@@ -208,10 +216,7 @@ public class ElevatorThread extends Thread {
             } else if (strategyType == Strategy.ElevatorStrategyType.REVISE_MOVE) {
                 preciselySleep(elevator.getMoveDurationMs());
                 tryGetRequest();
-                strategyType = Strategy.elevatorStrategy(
-                        elevator.getRequests(), elevator.getOnboards(),
-                        elevator.getFloor(), elevator.getDirection(), elevator.getMaxPassenger()
-                );
+                strategyType = Strategy.elevatorStrategy(elevator);
                 if (strategyType == Strategy.ElevatorStrategyType.OPEN) {
                     continue;
                 }

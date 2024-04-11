@@ -10,6 +10,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ShadowyCore {
+    public static long calculate(
+            ElevatorStatus statusBase, RequestsQueue<PassageRequest> waitQueueBase,
+            ElevatorStatus statusHigh, RequestsQueue<PassageRequest> waitQueueHigh,
+            PassageRequest request) {
+        return 1L;
+    }
+
     public static long calculate(ElevatorStatus status, PassageRequest request,
                                  RequestsQueue<PassageRequest> waitQueue) {
         ElevatorStatus newStatus = status.withAdditionRequests(waitQueue.dangerousGetRequests());

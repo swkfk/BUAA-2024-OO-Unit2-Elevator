@@ -48,6 +48,7 @@ public class Elevator {
     public void setLimitFloor(int min, int max, int floor) {
         this.floor = floor;
         this.limits.setLimitFloor(min, max);
+        direction = limits.getZoneDirection();
     }
 
     public int getFloor() {
@@ -98,12 +99,20 @@ public class Elevator {
 
     public long openDoor() {
         FormattedPrinter.elevatorOpen(this);
-        long t = System.currentTimeMillis();
+        final long t = System.currentTimeMillis();
         doorOpen = true;
+        if (floor == limits.getTransferFloor()) {
+            // Reach the transfer floor and open the door
+            direction = limits.getZoneDirection();  // Hey, hey! Ensure the direction here
+        }
         Iterator<PassageRequest> iterator = onboardRequests.iterator();
         while (iterator.hasNext()) {
             PassageRequest request = iterator.next();
-            if (request.getToFloor() == floor) {
+            if (floor == limits.getTransferFloor() &&
+                    (request.getToFloor() > floor || request.getToFloor() < floor)) {
+                FormattedPrinter.passengerLeave(request, floor);
+                iterator.remove();
+            } else if (request.getToFloor() == floor) {
                 FormattedPrinter.passengerLeave(request, floor);
                 iterator.remove();
             }
@@ -168,6 +177,10 @@ public class Elevator {
         return new ElevatorStatus(
                 floor, doorOpen, direction, limits, passageRequests, onboardRequests
         );
+    }
+
+    public ElevatorLimits getLimits() {
+        return limits;
     }
 
     public ElevatorStatus getStatus(long timeSnippet) {

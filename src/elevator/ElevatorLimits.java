@@ -7,6 +7,7 @@ public class ElevatorLimits {
     private int maxFloor = 11;
     private int transferFloor = -1;
     private long moveDurationMs = 400;
+    private ElevatorDirection zoneDirection = ElevatorDirection.UP;
     public static final long OPEN_DURATION_MS = 200;
     public static final long CLOSE_DURATION_MS = 200;
     public static final long OPENED_DURATION_MS = OPEN_DURATION_MS + CLOSE_DURATION_MS;
@@ -26,8 +27,10 @@ public class ElevatorLimits {
         this.maxFloor = maxFloor;
         if (minFloor == 1) {
             transferFloor = maxFloor;
+            zoneDirection = ElevatorDirection.DOWN;
         } else if (maxFloor == 11) {
             transferFloor = minFloor;
+            zoneDirection = ElevatorDirection.UP;
         }
     }
 
@@ -49,5 +52,9 @@ public class ElevatorLimits {
 
     public long getMoveDurationMs() {
         return moveDurationMs;
+    }
+
+    public ElevatorDirection getZoneDirection() {
+        return zoneDirection;
     }
 }

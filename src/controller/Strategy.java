@@ -1,6 +1,8 @@
 package controller;
 
+import elevator.Elevator;
 import elevator.ElevatorDirection;
+import elevator.ElevatorLimits;
 import requests.PassageRequest;
 
 import java.util.ArrayList;
@@ -10,9 +12,32 @@ public class Strategy {
         MOVE, OPEN, WAIT, REVISE_MOVE, REVISE_OPEN
     }
 
-    public static ElevatorStrategyType elevatorStrategy(
-            ArrayList<PassageRequest> requests, ArrayList<PassageRequest> onboards,
-            int floor, ElevatorDirection direction, int maxPassenger) {
+    public static ElevatorStrategyType elevatorStrategy(Elevator elevator) {
+        ArrayList<PassageRequest> requests = elevator.getRequests();
+        ArrayList<PassageRequest> onboards = elevator.getOnboards();
+        ElevatorDirection direction = elevator.getDirection();
+        int floor = elevator.getFloor();
+        int maxPassenger = elevator.getMaxPassenger();
+        ElevatorLimits limits = elevator.getLimits();
+        // If reach the transfer floor, must open or move immediately
+        if (limits.getTransferFloor() == floor) {
+            // Have passengers wanting to leave at this floor or go to the floor unreachable
+            if (hasTargetAhead(limits.getZoneDirection(), onboards, floor) ||
+                    // Have requests under the reachable zone
+                    hasRequestSameDirectionThisFloor(requests, floor, limits.getZoneDirection())) {
+                if (direction == limits.getZoneDirection()) {
+                    return ElevatorStrategyType.OPEN;
+                } else {
+                    return ElevatorStrategyType.REVISE_OPEN;
+                }
+            }
+            // Leave the transfer floor immediately
+            if (direction == limits.getZoneDirection()) {
+                return ElevatorStrategyType.MOVE;
+            } else {
+                return ElevatorStrategyType.REVISE_MOVE;
+            }
+        }
         // If someone want to leave, must open the door!
         if (needOpenOut(onboards, floor)) {
             if (hasRequestSameDirectionThisFloor(requests, floor, direction)) {
@@ -120,6 +145,21 @@ public class Strategy {
     private static boolean hasRemainedOnboards(ArrayList<PassageRequest> onboards, int floor) {
         for (PassageRequest onboard : onboards) {
             if (onboard.getToFloor() != floor) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasTargetAhead(
+            ElevatorDirection zoneDirection, ArrayList<PassageRequest> onboards, int floor) {
+        for (PassageRequest request : onboards) {
+            if (request.getToFloor() == floor) {
+                return true;
+            }
+            if (!zoneDirection.same(floor, request.getToFloor())) {
+                // floor != request.getToFloor()
+                // if floor > request.getToFloor() => Passenger go down, revise open!
                 return true;
             }
         }
