@@ -2,6 +2,7 @@ package controller;
 
 import elevator.ElevatorLimits;
 import elevator.ElevatorStatus;
+import elevator.ElevatorThread;
 import requests.BaseRequest;
 import requests.PassageRequest;
 import requests.RequestsQueue;
@@ -13,9 +14,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class SchedulerThread extends Thread {
     private final RequestsQueue<BaseRequest> waitQueue;
-    private final ArrayList<RequestsQueue<PassageRequest>> passageRequestsQueues;
-    private final ArrayList<AtomicReference<ElevatorStatus>> elevatorStatuses;
-    private final ArrayList<AtomicReference<requests.ResetRequest>> elevatorResets;
+    private final ArrayList<RequestsQueue<PassageRequest>> passageRequestsQueues;  // len == 12
+    private final ArrayList<AtomicReference<ElevatorStatus>> elevatorStatuses;  // len == 12
+    private final ArrayList<AtomicReference<requests.ResetRequest>> elevatorResets;  // len == 6
+    private final ArrayList<ElevatorThread> buddyThreads;  // len == 6
     private final Semaphore resetSemaphore;
 
     public SchedulerThread(
@@ -23,6 +25,7 @@ public class SchedulerThread extends Thread {
             ArrayList<RequestsQueue<PassageRequest>> passageRequestsQueues,
             ArrayList<AtomicReference<ElevatorStatus>> elevatorStatuses,
             ArrayList<AtomicReference<requests.ResetRequest>> elevatorResets,
+            ArrayList<ElevatorThread> buddyThreads,
             Semaphore resetSemaphore
     ) {
         super("Thread-Scheduler");
@@ -30,6 +33,7 @@ public class SchedulerThread extends Thread {
         this.passageRequestsQueues = passageRequestsQueues;
         this.elevatorStatuses = elevatorStatuses;
         this.elevatorResets = elevatorResets;
+        this.buddyThreads = buddyThreads;
         this.resetSemaphore = resetSemaphore;
     }
 
@@ -82,15 +86,32 @@ public class SchedulerThread extends Thread {
         long timeDelta;
         long minTimeDelta = Long.MAX_VALUE;
         int targetElevatorId = 0;
+        int targetElevatorIdToChoose;
         for (int i = ElevatorLimits.ELEVATOR_COUNT; i < ElevatorLimits.ELEVATOR_COUNT * 2; ++i) {
             synchronized (passageRequestsQueues.get(i)) {
-                timeDelta = ShadowyCore.calculate(
-                        elevatorStatuses.get(i).get(), request, passageRequestsQueues.get(i));
+                synchronized (passageRequestsQueues.get(i - 6)) {
+                    if (!buddyThreads.get(i - 6).isAlive()) {
+                        // Not started yet
+                        timeDelta = ShadowyCore.calculate(
+                                elevatorStatuses.get(i).get(), request, passageRequestsQueues.get(i)
+                        );
+                        targetElevatorIdToChoose = i - 6 + 1;
+                    } else {
+                        // Have buddy thread
+                        long[] ret = ShadowyCore.calculate(
+                                elevatorStatuses.get(i).get(), passageRequestsQueues.get(i),
+                                elevatorStatuses.get(i - 6).get(), passageRequestsQueues.get(i - 6),
+                                request, i
+                        );
+                        timeDelta = ret[0];
+                        targetElevatorIdToChoose = (int) ret[1];
+                    }
+                }
             }
             // System.out.println("Elevator " + (i + 1) + " timeDelta: " + timeDelta);
             if (timeDelta < minTimeDelta) {
                 minTimeDelta = timeDelta;
-                targetElevatorId = i + 1;
+                targetElevatorId = targetElevatorIdToChoose;
             }
         }
         // System.out.println(request.getPersonId() + " To " + targetElevatorId);

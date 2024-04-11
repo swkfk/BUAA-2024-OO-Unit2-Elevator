@@ -47,7 +47,8 @@ public class Main {
         }
 
         SchedulerThread scheduler = new SchedulerThread(
-                waitQueue, processingQueues, elevatorStatuses, elevatorResets, resetSemaphore);
+                waitQueue, processingQueues, elevatorStatuses,
+                elevatorResets, elevatorBackupThreads, resetSemaphore);
         scheduler.start();
 
         InputThread inputThread = new InputThread(waitQueue);

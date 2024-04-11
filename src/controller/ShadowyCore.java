@@ -10,11 +10,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ShadowyCore {
-    public static long calculate(
-            ElevatorStatus statusBase, RequestsQueue<PassageRequest> waitQueueBase,
-            ElevatorStatus statusHigh, RequestsQueue<PassageRequest> waitQueueHigh,
-            PassageRequest request) {
-        return 1L;
+    public static long[] calculate(
+            ElevatorStatus statusMain, RequestsQueue<PassageRequest> waitQueueMain,
+            ElevatorStatus statusBuddy, RequestsQueue<PassageRequest> waitQueueBuddy,
+            PassageRequest request, int buddyId) {
+        return new long[]{1L, 1L};
     }
 
     public static long calculate(ElevatorStatus status, PassageRequest request,

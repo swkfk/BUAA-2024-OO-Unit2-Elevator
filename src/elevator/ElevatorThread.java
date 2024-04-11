@@ -158,7 +158,6 @@ public class ElevatorThread extends Thread {
             buddy.elevator.reset(resetRequest);
             this.setElevatorFloor(1, transferFloor, transferFloor - 1);
             buddy.setElevatorFloor(transferFloor, 11, transferFloor + 1);
-            buddy.start();
         }
 
         this.updateStatus();
@@ -167,6 +166,11 @@ public class ElevatorThread extends Thread {
             reset.set(null);  // Ensure that reset will not be written twice
             reset.notify();
         }
+
+        if (transferFloor > 0) {
+            buddy.start();
+        }
+
         resetSemaphore.release();
     }
 
