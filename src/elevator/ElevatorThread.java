@@ -155,6 +155,7 @@ public class ElevatorThread extends Thread {
         if (transferFloor > 0) {
             // Double car reset
             this.elevator.setOutputNameToA();
+            buddy.elevator.reset(resetRequest);
             this.setElevatorFloor(1, transferFloor, transferFloor - 1);
             buddy.setElevatorFloor(transferFloor, 11, transferFloor + 1);
             buddy.start();
