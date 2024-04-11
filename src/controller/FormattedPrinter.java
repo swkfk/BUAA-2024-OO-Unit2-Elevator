@@ -5,18 +5,18 @@ import elevator.Elevator;
 import requests.PassageRequest;
 
 public class FormattedPrinter {
-    public static long passengerEnter(PassageRequest request, int floor) {
+    public static long passengerEnter(PassageRequest request, int floor, Elevator elevator) {
         return TimableOutput.println(
-                String.format("IN-%d-%d-%d",
-                        request.getPersonId(), floor, request.getElevatorId()
+                String.format("IN-%d-%d-%s",
+                        request.getPersonId(), floor, elevator.getOutputName()
                 )
         );
     }
 
-    public static long passengerLeave(PassageRequest request, int floor) {
+    public static long passengerLeave(PassageRequest request, int floor, Elevator elevator) {
         return TimableOutput.println(
-                String.format("OUT-%d-%d-%d",
-                        request.getPersonId(), floor, request.getElevatorId()
+                String.format("OUT-%d-%d-%s",
+                        request.getPersonId(), floor, elevator.getOutputName()
                 )
         );
     }
@@ -39,9 +39,9 @@ public class FormattedPrinter {
         );
     }
 
-    public static long receiveRequest(PassageRequest request) {
+    public static long receiveRequest(PassageRequest request, Elevator elevator) {
         return TimableOutput.println(
-                String.format("RECEIVE-%d-%d", request.getPersonId(), request.getElevatorId())
+                String.format("RECEIVE-%d-%s", request.getPersonId(), elevator.getOutputName())
         );
     }
 

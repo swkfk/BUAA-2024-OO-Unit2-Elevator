@@ -110,10 +110,10 @@ public class Elevator {
             PassageRequest request = iterator.next();
             if (floor == limits.getTransferFloor() &&
                     (request.getToFloor() > floor || request.getToFloor() < floor)) {
-                FormattedPrinter.passengerLeave(request, floor);
+                FormattedPrinter.passengerLeave(request, floor, this);
                 iterator.remove();
             } else if (request.getToFloor() == floor) {
-                FormattedPrinter.passengerLeave(request, floor);
+                FormattedPrinter.passengerLeave(request, floor, this);
                 iterator.remove();
             }
         }
@@ -127,7 +127,7 @@ public class Elevator {
             if (request.getFromFloor() == floor
                     && onboardRequests.size() < limits.getMaxPassenger()
                     && request.sameDirection(direction)) {
-                FormattedPrinter.passengerEnter(request, floor);
+                FormattedPrinter.passengerEnter(request, floor, this);
                 onboardRequests.add(request);
                 iterator.remove();
             }
@@ -146,7 +146,7 @@ public class Elevator {
                 doorOpen = true;
             }
             for (PassageRequest request : onboardRequests) {
-                FormattedPrinter.passengerLeave(request, floor);
+                FormattedPrinter.passengerLeave(request, floor, this);
                 if (request.getToFloor() != floor) {
                     request.setFromFloor(floor);  // Elevator will not move in reset
                     removed.add(request);

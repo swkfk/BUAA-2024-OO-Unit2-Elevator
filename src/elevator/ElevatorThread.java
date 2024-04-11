@@ -93,7 +93,7 @@ public class ElevatorThread extends Thread {
                 // Add request to elevator directly
                 elevator.addRequest(request);
                 this.updateStatus();
-                FormattedPrinter.receiveRequest(request);
+                FormattedPrinter.receiveRequest(request, elevator);
                 try {
                     // How dare you! It's strange to wait for 1ms but useful?
                     this.requestsQueue.wait(1);
