@@ -139,9 +139,9 @@ public class ElevatorThread extends Thread {
             buddy.elevator.reset(resetRequest);
             this.setElevatorFloor(1, transferFloor, transferFloor - 1);
             buddy.setElevatorFloor(transferFloor, 11, transferFloor + 1);
+        } else {
+            this.updateStatus();
         }
-
-        this.updateStatus();
 
         // Clear the shared request queue between the scheduler and the elevator
         synchronized (this.requestsQueue) {
@@ -178,6 +178,7 @@ public class ElevatorThread extends Thread {
         }
 
         if (transferFloor > 0) {
+            this.updateStatus();
             buddy.start();
         }
 

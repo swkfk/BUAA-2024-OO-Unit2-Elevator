@@ -47,7 +47,7 @@ public class ShadowyCore {
             long timeDeltaDown = res[0];
             ElevatorStatus.PlainRequest requestP = new ElevatorStatus.PlainRequest(request);
             status = statusBuddy.withAdditionRequests(waitQueueBuddy.dangerousGetRequests());
-            request.setFromFloor(transferFloor);
+            requestP.setFromFloor(transferFloor);
             long timeDeltaUp = calculate(status, 4L, targetId, res[1], requestP)[0];
             return new long[]{Math.max(timeDeltaDown, timeDeltaUp), downId};
         } else if (request.getFromFloor() > transferFloor) {
@@ -58,7 +58,7 @@ public class ShadowyCore {
             long timeDeltaUp = res[0];
             ElevatorStatus.PlainRequest requestP = new ElevatorStatus.PlainRequest(request);
             status = statusMain.withAdditionRequests(waitQueueMain.dangerousGetRequests());
-            request.setFromFloor(transferFloor);
+            requestP.setFromFloor(transferFloor);
             long timeDeltaDown = calculate(status, 4L, targetId, res[1], requestP)[0];
             return new long[]{Math.max(timeDeltaDown, timeDeltaUp), upId};
         }
@@ -68,7 +68,7 @@ public class ShadowyCore {
         // System.out.println("From: " + request.getFromFloor());
         // System.out.println("To: " + request.getToFloor());
         // System.out.println("Target ID: " + targetId);
-        return new long[]{0x7fffffffL, -1L};  // Unreachable
+        return new long[]{10000001L, -1L};  // Unreachable
     }
 
     public static long calculate(ElevatorStatus status, PassageRequest request,
@@ -92,10 +92,10 @@ public class ShadowyCore {
         ElevatorLimits limits = status.getLimits();
         int maxPassenger = limits.getMaxPassenger();
         long moveDurationMs = limits.getMoveDurationMs();
-        if (limits.getTransferFloor() != -1) {
-            // Abnormal Case
-            return new long[]{0x7fffffffL, -1L};
-        }
+        // if (limits.getTransferFloor() != -1) {
+        //     // Abnormal Case
+        //     return new long[]{10000002L, -1L};
+        // }
 
         // Shallow Copied ArrayList
         ArrayList<ElevatorStatus.PlainRequest> waitRequests =
@@ -125,7 +125,7 @@ public class ShadowyCore {
 
         long insertTime = arriveTime;
 
-        while (onboardRequests.size() != 0 || waitRequests.size() != 0 || insertTime > 0) {
+        while (onboardRequests.size() != 0 || waitRequests.size() != 0 || insertTime >= 0) {
             if (onboardRequests.size() == 0 && waitRequests.size() == 0 && request != null) {
                 globalTime = Math.max(globalTime, insertTime);
                 insertTime = -1;
@@ -180,7 +180,7 @@ public class ShadowyCore {
             }
             if (globalTime > 300000) {
                 // pruned at 300 seconds
-                return new long[]{0x7fffffffL, -1L};
+                return new long[]{10000003L, -1L};
             }
         }
 

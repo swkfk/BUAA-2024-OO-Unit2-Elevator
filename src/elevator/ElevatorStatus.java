@@ -96,7 +96,7 @@ public class ElevatorStatus {
 
     public static class PlainRequest {
         private final int toFloor;
-        private final int fromFloor;
+        private int fromFloor;
         private final int passengerId;
 
         public PlainRequest(int toFloor, int fromFloor, int passengerId) {
@@ -127,6 +127,10 @@ public class ElevatorStatus {
                     "toFloor=" + toFloor +
                     ", fromFloor=" + fromFloor +
                     '}';
+        }
+
+        public void setFromFloor(int transferFloor) {
+            this.fromFloor = transferFloor;
         }
     }
 
