@@ -133,12 +133,30 @@ public class ElevatorThread extends Thread {
         createTimeSnippet();
         this.updateStatusWithTimeStamp();
 
+        if (transferFloor > 0) {
+            // Double car reset
+            this.elevator.setOutputNameToA();
+            buddy.elevator.reset(resetRequest);
+            this.setElevatorFloor(1, transferFloor, transferFloor - 1);
+            buddy.setElevatorFloor(transferFloor, 11, transferFloor + 1);
+        }
+
+        this.updateStatus();
+
         // Clear the shared request queue between the scheduler and the elevator
         synchronized (this.requestsQueue) {
             PassageRequest request = this.requestsQueue.popRequestWithoutWait();
             while (request != null) {
                 removed.add(request);
                 request = this.requestsQueue.popRequestWithoutWait();
+            }
+        }
+
+        synchronized (buddy.requestsQueue) {
+            PassageRequest request = buddy.requestsQueue.popRequestWithoutWait();
+            while (request != null) {
+                removed.add(request);
+                request = buddy.requestsQueue.popRequestWithoutWait();
             }
         }
 
@@ -153,16 +171,6 @@ public class ElevatorThread extends Thread {
 
         FormattedPrinter.resetEnd(elevator.getElevatorId());
         createTimeSnippet();
-
-        if (transferFloor > 0) {
-            // Double car reset
-            this.elevator.setOutputNameToA();
-            buddy.elevator.reset(resetRequest);
-            this.setElevatorFloor(1, transferFloor, transferFloor - 1);
-            buddy.setElevatorFloor(transferFloor, 11, transferFloor + 1);
-        }
-
-        this.updateStatus();
 
         synchronized (reset) {
             reset.set(null);  // Ensure that reset will not be written twice
