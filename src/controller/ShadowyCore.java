@@ -146,6 +146,12 @@ public class ShadowyCore {
                         !hasSameDirectionRequest(direction, floor, waitRequests)) {
                     direction = direction.reverse();
                 }
+                // Ensure that the elevator's direction is correct
+                if (floor == limits.getMinFloor()) {
+                    direction = ElevatorDirection.UP;
+                } else if (floor == limits.getMaxFloor()) {
+                    direction = ElevatorDirection.DOWN;
+                }
                 enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
                 electricity += ELECTRICITY_OPEN * 2;
             } else if (hasSameDirectionRequest(direction, floor, waitRequests) &&
