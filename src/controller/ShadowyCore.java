@@ -10,6 +10,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ShadowyCore {
+    private static final long ELECTRICITY_MOVE = 80L;
+    private static final long ELECTRICITY_OPEN = 20L;
+    private static final long ELECTRICITY_MOVE_D = 20L;
+    private static final long ELECTRICITY_OPEN_D = 5L;
+
     public static long[] calculate(
             ElevatorStatus statusMain, RequestsQueue<PassageRequest> waitQueueMain,
             ElevatorStatus statusBuddy, RequestsQueue<PassageRequest> waitQueueBuddy,
@@ -48,10 +53,15 @@ public class ShadowyCore {
     }
 
     private static long calculate(ElevatorStatus status) {
+        long electricity = 0L;
         // Basic Limits
         ElevatorLimits limits = status.getLimits();
         int maxPassenger = limits.getMaxPassenger();
         long moveDurationMs = limits.getMoveDurationMs();
+        if (limits.getTransferFloor() != -1) {
+            // Abnormal Case
+            return 0x7fffffffL;
+        }
 
         // Shallow Copied ArrayList
         ArrayList<ElevatorStatus.PlainRequest> waitRequests =
@@ -73,6 +83,7 @@ public class ShadowyCore {
             globalTime += ElevatorLimits.CLOSE_DURATION_MS;  // Not so accurate
             leaveElevator(floor, onboardRequests);
             enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
+            electricity += ELECTRICITY_OPEN;
         }
 
         while (onboardRequests.size() != 0 || waitRequests.size() != 0) {
@@ -85,10 +96,12 @@ public class ShadowyCore {
                     direction = direction.reverse();
                 }
                 enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
+                electricity += ELECTRICITY_OPEN * 2;
             } else if (hasSameDirectionRequest(direction, floor, waitRequests) &&
                     hasSpace(onboardRequests, maxPassenger)) {
                 globalTime += ElevatorLimits.OPENED_DURATION_MS;
                 enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
+                electricity += ELECTRICITY_OPEN * 2;
             } else if (!hasRequestAhead(direction, floor, waitRequests) &&
                     hasOppositeDirectionRequest(direction, floor, waitRequests) &&
                     hasSpace(onboardRequests, maxPassenger)) {
@@ -97,6 +110,7 @@ public class ShadowyCore {
                 direction = direction.reverse();
                 globalTime += ElevatorLimits.OPENED_DURATION_MS;
                 enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
+                electricity += ELECTRICITY_OPEN * 2;
             } else {
                 if (floor == limits.getMinFloor()) {
                     direction = ElevatorDirection.UP;
@@ -105,10 +119,11 @@ public class ShadowyCore {
                 }
                 globalTime += moveDurationMs;
                 floor = move(direction, floor);
+                electricity += ELECTRICITY_MOVE;
             }
         }
 
-        return globalTime;
+        return globalTime + electricity;
     }
 
     private static void leaveElevator(
