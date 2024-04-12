@@ -45,9 +45,10 @@ public class ShadowyCore {
                     waitQueueMain.dangerousGetRequests());
             long[] res = calculate(status.withAdditionRequest(request), 4L, targetId);
             long timeDeltaDown = res[0];
+            ElevatorStatus.PlainRequest requestP = new ElevatorStatus.PlainRequest(request);
             status = statusBuddy.withAdditionRequests(waitQueueBuddy.dangerousGetRequests());
             request.setFromFloor(transferFloor);
-            long timeDeltaUp = calculate(status, 4L, targetId, res[1], request)[0];
+            long timeDeltaUp = calculate(status, 4L, targetId, res[1], requestP)[0];
             return new long[]{Math.max(timeDeltaDown, timeDeltaUp), downId};
         } else if (request.getFromFloor() > transferFloor) {
             ElevatorStatus status = statusBuddy
@@ -55,9 +56,10 @@ public class ShadowyCore {
                     .withAdditionRequest(request);
             long[] res = calculate(status, 4L, targetId);
             long timeDeltaUp = res[0];
+            ElevatorStatus.PlainRequest requestP = new ElevatorStatus.PlainRequest(request);
             status = statusMain.withAdditionRequests(waitQueueMain.dangerousGetRequests());
             request.setFromFloor(transferFloor);
-            long timeDeltaDown = calculate(status, 4L, targetId, res[1], request)[0];
+            long timeDeltaDown = calculate(status, 4L, targetId, res[1], requestP)[0];
             return new long[]{Math.max(timeDeltaDown, timeDeltaUp), upId};
         }
         // System.out.println("Up ID: " + upId);
