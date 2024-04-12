@@ -180,6 +180,7 @@ public class ElevatorThread extends Thread {
         if (transferFloor > 0) {
             this.updateStatus();
             buddy.start();
+            buddy.updateStatusWithTimeStamp();
         }
 
         resetSemaphore.release();
