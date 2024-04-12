@@ -12,8 +12,6 @@ import java.util.Iterator;
 public class ShadowyCore {
     private static final long ELECTRICITY_MOVE = 80L;
     private static final long ELECTRICITY_OPEN = 20L;
-    private static final long ELECTRICITY_MOVE_D = 20L;
-    private static final long ELECTRICITY_OPEN_D = 5L;
 
     public static long[] calculate(
             ElevatorStatus statusMain, RequestsQueue<PassageRequest> waitQueueMain,
@@ -49,10 +47,10 @@ public class ShadowyCore {
         ElevatorStatus newStatus = status.withAdditionRequests(waitQueue.dangerousGetRequests());
         // System.out.println(newStatus);
         // long timeWithoutRequest = calculate(newStatus);
-        return calculate(newStatus.withAdditionRequest(request));
+        return calculate(newStatus.withAdditionRequest(request), 1L);
     }
 
-    private static long calculate(ElevatorStatus status) {
+    private static long calculate(ElevatorStatus status, long electricityRatio) {
         long electricity = 0L;
         // Basic Limits
         ElevatorLimits limits = status.getLimits();
@@ -123,7 +121,7 @@ public class ShadowyCore {
             }
         }
 
-        return globalTime + electricity;
+        return globalTime + electricity / electricityRatio;
     }
 
     private static void leaveElevator(
