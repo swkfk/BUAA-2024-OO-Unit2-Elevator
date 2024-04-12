@@ -1,5 +1,6 @@
 package elevator;
 
+import com.oocourse.elevator3.PersonRequest;
 import requests.PassageRequest;
 
 import java.util.ArrayList;
@@ -24,11 +25,11 @@ public class ElevatorStatus {
         this.limits = limits;
         this.waitRequests = new ArrayList<>();
         for (PassageRequest request : waitQueue) {
-            waitRequests.add(new PlainRequest(request.getToFloor(), request.getFromFloor()));
+            waitRequests.add(new PlainRequest(request));
         }
         this.onboardRequests = new ArrayList<>();
         for (PassageRequest request : onboardQueue) {
-            onboardRequests.add(new PlainRequest(request.getToFloor(), request.getFromFloor()));
+            onboardRequests.add(new PlainRequest(request));
         }
     }
 
@@ -81,15 +82,14 @@ public class ElevatorStatus {
 
     public ElevatorStatus withAdditionRequest(PassageRequest request) {
         ElevatorStatus newStatus = new ElevatorStatus(this);
-        newStatus.waitRequests.add(new PlainRequest(request.getToFloor(), request.getFromFloor()));
+        newStatus.waitRequests.add(new PlainRequest(request));
         return newStatus;
     }
 
     public ElevatorStatus withAdditionRequests(LinkedList<PassageRequest> requests) {
         ElevatorStatus newStatus = new ElevatorStatus(this);
         for (PassageRequest request : requests) {
-            newStatus.waitRequests.add(
-                    new PlainRequest(request.getToFloor(), request.getFromFloor()));
+            newStatus.waitRequests.add(new PlainRequest(request));
         }
         return newStatus;
     }
@@ -97,10 +97,16 @@ public class ElevatorStatus {
     public static class PlainRequest {
         private final int toFloor;
         private final int fromFloor;
+        private final int passengerId;
 
-        public PlainRequest(int toFloor, int fromFloor) {
+        public PlainRequest(int toFloor, int fromFloor, int passengerId) {
             this.toFloor = toFloor;
             this.fromFloor = fromFloor;
+            this.passengerId = passengerId;
+        }
+
+        public PlainRequest(PassageRequest request) {
+            this(request.getToFloor(), request.getFromFloor(), request.getPersonId());
         }
 
         public int getToFloor() {
@@ -109,6 +115,10 @@ public class ElevatorStatus {
 
         public int getFromFloor() {
             return fromFloor;
+        }
+
+        public boolean same(int otherId) {
+            return this.passengerId == otherId;
         }
 
         @Override

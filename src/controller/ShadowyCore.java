@@ -18,20 +18,47 @@ public class ShadowyCore {
             ElevatorStatus statusBuddy, RequestsQueue<PassageRequest> waitQueueBuddy,
             PassageRequest request, int upId) {
         int downId = upId + 6;
-        int targetId;
+        int targetId = request.getPersonId();
         int transferFloor = statusMain.getLimits().getTransferFloor();
-        if (transferFloor == request.getFromFloor()) {
-            if (request.getToFloor() < transferFloor) {
-                targetId = downId;
-            } else {
-                targetId = upId;
-            }
-        } else {
-            if (request.getFromFloor() < transferFloor) {
-                targetId = downId;
-            } else {
-                targetId = upId;
-            }
+        if (request.getFromFloor() <= transferFloor &&
+                request.getToFloor() <= transferFloor) {
+            ElevatorStatus status = statusMain.withAdditionRequests(
+                    waitQueueMain.dangerousGetRequests());
+            long timeDelta = Math.max(
+                    calculate(status.withAdditionRequest(request), 4L, -1)[0],
+                    calculate(statusBuddy.withAdditionRequests(
+                            waitQueueBuddy.dangerousGetRequests()), 4L, -1)[0]
+            );
+            return new long[]{timeDelta, downId};
+        } else if (request.getFromFloor() >= transferFloor &&
+                request.getToFloor() >= transferFloor) {
+            ElevatorStatus status = statusBuddy.withAdditionRequests(
+                    waitQueueBuddy.dangerousGetRequests());
+            long timeDelta = Math.max(
+                    calculate(status.withAdditionRequest(request), 4L, -1)[0],
+                    calculate(statusMain.withAdditionRequests(waitQueueMain.dangerousGetRequests()),
+                            4L, -1)[0]
+            );
+            return new long[]{timeDelta, upId};
+        } else if (request.getFromFloor() < transferFloor) {
+            ElevatorStatus status = statusMain.withAdditionRequests(
+                    waitQueueMain.dangerousGetRequests());
+            long[] res = calculate(status.withAdditionRequest(request), 4L, targetId);
+            long timeDeltaDown = res[0];
+            status = statusBuddy.withAdditionRequests(waitQueueBuddy.dangerousGetRequests());
+            request.setFromFloor(transferFloor);
+            long timeDeltaUp = calculate(status, 4L, targetId, res[1], request)[0];
+            return new long[]{Math.max(timeDeltaDown, timeDeltaUp), downId};
+        } else if (request.getFromFloor() > transferFloor) {
+            ElevatorStatus status = statusBuddy
+                    .withAdditionRequests(waitQueueBuddy.dangerousGetRequests())
+                    .withAdditionRequest(request);
+            long[] res = calculate(status, 4L, targetId);
+            long timeDeltaUp = res[0];
+            status = statusMain.withAdditionRequests(waitQueueMain.dangerousGetRequests());
+            request.setFromFloor(transferFloor);
+            long timeDeltaDown = calculate(status, 4L, targetId, res[1], request)[0];
+            return new long[]{Math.max(timeDeltaDown, timeDeltaUp), upId};
         }
         // System.out.println("Up ID: " + upId);
         // System.out.println("Down ID: " + downId);
@@ -39,7 +66,7 @@ public class ShadowyCore {
         // System.out.println("From: " + request.getFromFloor());
         // System.out.println("To: " + request.getToFloor());
         // System.out.println("Target ID: " + targetId);
-        return new long[]{1L, targetId};
+        return new long[]{0x7fffffffL, -1L};  // Unreachable
     }
 
     public static long calculate(ElevatorStatus status, PassageRequest request,
@@ -47,18 +74,25 @@ public class ShadowyCore {
         ElevatorStatus newStatus = status.withAdditionRequests(waitQueue.dangerousGetRequests());
         // System.out.println(newStatus);
         // long timeWithoutRequest = calculate(newStatus);
-        return calculate(newStatus.withAdditionRequest(request), 1L);
+        return calculate(newStatus.withAdditionRequest(request), 1L, -1)[0];
     }
 
-    private static long calculate(ElevatorStatus status, long electricityRatio) {
+    private static long[] calculate(ElevatorStatus status, long electricityRatio, int targetId) {
+        return calculate(status, electricityRatio, targetId, -1L, null);
+    }
+
+    private static long[] calculate(ElevatorStatus status, long electricityRatio, int targetId,
+                                    long arriveTime, ElevatorStatus.PlainRequest request) {
+        int transferId = targetId;
         long electricity = 0L;
+        long leaveTime = -1L;
         // Basic Limits
         ElevatorLimits limits = status.getLimits();
         int maxPassenger = limits.getMaxPassenger();
         long moveDurationMs = limits.getMoveDurationMs();
         if (limits.getTransferFloor() != -1) {
             // Abnormal Case
-            return 0x7fffffffL;
+            return new long[]{0x7fffffffL, -1L};
         }
 
         // Shallow Copied ArrayList
@@ -79,15 +113,32 @@ public class ShadowyCore {
 
         if (status.isOpened()) {
             globalTime += ElevatorLimits.CLOSE_DURATION_MS;  // Not so accurate
-            leaveElevator(floor, onboardRequests);
+            if (leaveElevator(floor, transferId, onboardRequests)) {
+                leaveTime = globalTime;
+                transferId = -1;
+            }
             enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
             electricity += ELECTRICITY_OPEN;
         }
 
-        while (onboardRequests.size() != 0 || waitRequests.size() != 0) {
+        long insertTime = arriveTime;
+
+        while (onboardRequests.size() != 0 || waitRequests.size() != 0 || insertTime > 0) {
+            if (onboardRequests.size() == 0 && waitRequests.size() == 0 && request != null) {
+                globalTime = Math.max(globalTime, insertTime);
+                insertTime = -1;
+                waitRequests.add(request);
+            }
+            if (globalTime >= insertTime && request != null) {
+                insertTime = -1;
+                waitRequests.add(request);
+            }
             if (hasPassengerOut(floor, onboardRequests)) {
                 globalTime += ElevatorLimits.OPENED_DURATION_MS;
-                leaveElevator(floor, onboardRequests);
+                if (leaveElevator(floor, transferId, onboardRequests)) {
+                    leaveTime = globalTime;
+                    transferId = -1;
+                }
                 if (onboardRequests.size() == 0 &&
                         !hasRequestAhead(direction, floor, waitRequests) &&
                         !hasSameDirectionRequest(direction, floor, waitRequests)) {
@@ -121,13 +172,24 @@ public class ShadowyCore {
             }
         }
 
-        return globalTime + electricity / electricityRatio;
+        return new long[]{globalTime + electricity / electricityRatio, leaveTime};
     }
 
-    private static void leaveElevator(
-            int floor,
+    private static boolean leaveElevator(
+            int floor, int targetId,
             ArrayList<ElevatorStatus.PlainRequest> onboardRequests) {
-        onboardRequests.removeIf(request -> request.getToFloor() == floor);
+        boolean gotTarget = false;
+        Iterator<ElevatorStatus.PlainRequest> iterator = onboardRequests.iterator();
+        while (iterator.hasNext()) {
+            ElevatorStatus.PlainRequest request = iterator.next();
+            if (request.getToFloor() == floor) {
+                iterator.remove();
+            }
+            if (request.same(targetId)) {
+                gotTarget = true;
+            }
+        }
+        return gotTarget;
     }
 
     private static void enterSameDirection(
