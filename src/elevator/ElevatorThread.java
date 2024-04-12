@@ -1,6 +1,7 @@
 package elevator;
 
 import controller.FormattedPrinter;
+import controller.GlobalCounter;
 import controller.Strategy;
 import requests.BaseRequest;
 import requests.PassageRequest;
@@ -166,11 +167,13 @@ public class ElevatorThread extends Thread {
                 this.waitQueue.addRequest(request);
             }
         }
+        GlobalCounter.rawNotify();
 
         preciselySleep(ElevatorLimits.RESET_DURATION_MS);
 
         FormattedPrinter.resetEnd(elevator.getElevatorId());
         createTimeSnippet();
+        buddy.createTimeSnippet();
 
         synchronized (reset) {
             reset.set(null);  // Ensure that reset will not be written twice
@@ -180,7 +183,6 @@ public class ElevatorThread extends Thread {
         if (transferFloor > 0) {
             this.updateStatus();
             buddy.start();
-            buddy.updateStatusWithTimeStamp();
         }
 
         resetSemaphore.release();

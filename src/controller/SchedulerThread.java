@@ -44,7 +44,7 @@ public class SchedulerThread extends Thread {
     @Override
     public void run() {
         while (true) {
-            if (waitQueue.isEnd() && waitQueue.isEmpty() && GlobalCounter.zero() && resetOver()) {
+            if (waitQueue.isEnd() && waitQueue.isEmpty() && passengerOver() && resetOver()) {
                 for (RequestsQueue<PassageRequest> passageRequestsQueue : passageRequestsQueues) {
                     passageRequestsQueue.setEnd();
                 }
@@ -144,6 +144,20 @@ public class SchedulerThread extends Thread {
                     }
                     return false;
                 }
+            }
+        }
+        return true;
+    }
+
+    private boolean passengerOver() {
+        if (!GlobalCounter.zero()) {
+            synchronized (GlobalCounter.class) {
+                try {
+                    GlobalCounter.class.wait();
+                } catch (InterruptedException e) {
+                    // e.printStackTrace();
+                }
+                return false;
             }
         }
         return true;

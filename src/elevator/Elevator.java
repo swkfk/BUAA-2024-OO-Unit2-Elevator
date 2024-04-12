@@ -136,6 +136,7 @@ public class Elevator {
                     FormattedPrinter.passengerLeave(request, floor, this);
                     request.setFromFloor(floor);
                     waitQueue.addRequest(request);
+                    GlobalCounter.rawNotify();
                     iterator.remove();
                 }
             }
