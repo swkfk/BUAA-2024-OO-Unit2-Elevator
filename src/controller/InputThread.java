@@ -31,6 +31,7 @@ public class InputThread extends Thread {
                 } else {
                     if (request instanceof PersonRequest) {
                         waitQueue.addRequest(new PassageRequest((PersonRequest) request));
+                        GlobalCounter.increase();
                     } else if (request instanceof NormalResetRequest) {
                         waitQueue.addRequest(new ResetRequest((NormalResetRequest) request));
                     } else if (request instanceof DoubleCarResetRequest) {

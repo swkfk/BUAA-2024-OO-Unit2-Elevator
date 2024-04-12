@@ -44,7 +44,7 @@ public class SchedulerThread extends Thread {
     @Override
     public void run() {
         while (true) {
-            if (waitQueue.isEnd() && waitQueue.isEmpty() && resetOver() && elevatorOver()) {
+            if (waitQueue.isEnd() && waitQueue.isEmpty() && GlobalCounter.zero() && resetOver()) {
                 for (RequestsQueue<PassageRequest> passageRequestsQueue : passageRequestsQueues) {
                     passageRequestsQueue.setEnd();
                 }
@@ -144,21 +144,6 @@ public class SchedulerThread extends Thread {
                     }
                     return false;
                 }
-            }
-        }
-        return true;
-    }
-
-    private boolean elevatorOver() {
-        for (RequestsQueue<PassageRequest> passageRequestsQueue : passageRequestsQueues) {
-            if (!passageRequestsQueue.isEmpty()) {
-                return false;
-            }
-        }
-        for (ElevatorThread elevatorThread : threads) {
-            if (elevatorThread.getState() != State.WAITING
-                    && elevatorThread.getState() != State.NEW) {
-                return false;
             }
         }
         return true;

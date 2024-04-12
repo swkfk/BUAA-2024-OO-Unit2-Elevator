@@ -1,6 +1,7 @@
 package elevator;
 
 import controller.FormattedPrinter;
+import controller.GlobalCounter;
 import requests.BaseRequest;
 import requests.PassageRequest;
 import requests.RequestsQueue;
@@ -126,6 +127,7 @@ public class Elevator {
             if (request.getToFloor() == floor) {
                 // Arrive the destination
                 FormattedPrinter.passengerLeave(request, floor, this);
+                GlobalCounter.decrease();
                 iterator.remove();
             } else if (floor == limits.getTransferFloor()) {
                 // Reach the transfer floor
