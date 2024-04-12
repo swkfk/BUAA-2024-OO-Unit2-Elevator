@@ -150,8 +150,8 @@ public class SchedulerThread extends Thread {
     }
 
     private boolean passengerOver() {
-        if (!GlobalCounter.zero()) {
-            synchronized (GlobalCounter.class) {
+        synchronized (GlobalCounter.class) {
+            if (!GlobalCounter.zero()) {
                 try {
                     GlobalCounter.class.wait();
                 } catch (InterruptedException e) {

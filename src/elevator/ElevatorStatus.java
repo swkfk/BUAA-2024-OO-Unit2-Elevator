@@ -1,6 +1,5 @@
 package elevator;
 
-import com.oocourse.elevator3.PersonRequest;
 import requests.PassageRequest;
 
 import java.util.ArrayList;

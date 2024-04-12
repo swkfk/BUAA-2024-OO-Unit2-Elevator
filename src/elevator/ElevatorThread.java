@@ -109,6 +109,13 @@ public class ElevatorThread extends Thread {
         return true;
     }
 
+    private void setBuddyAttribute(ResetRequest resetRequest, int transferFloor) {
+        this.elevator.setOutputNameToA();
+        buddy.elevator.reset(resetRequest);
+        this.setElevatorFloor(1, transferFloor, transferFloor - 1);
+        buddy.setElevatorFloor(transferFloor, 11, transferFloor + 1);
+    }
+
     private void doReset() {
         try {
             resetSemaphore.acquire();
@@ -120,7 +127,7 @@ public class ElevatorThread extends Thread {
         ResetRequest resetRequest = this.reset.get();
         ArrayList<PassageRequest> removed = elevator.reset(resetRequest);
 
-        int transferFloor = resetRequest.getTransferFloor();
+        final int transferFloor = resetRequest.getTransferFloor();
 
         createTimeSnippet();
         if (elevator.isDoorOpen()) {
@@ -136,10 +143,7 @@ public class ElevatorThread extends Thread {
 
         if (transferFloor > 0) {
             // Double car reset
-            this.elevator.setOutputNameToA();
-            buddy.elevator.reset(resetRequest);
-            this.setElevatorFloor(1, transferFloor, transferFloor - 1);
-            buddy.setElevatorFloor(transferFloor, 11, transferFloor + 1);
+            setBuddyAttribute(resetRequest, transferFloor);
         } else {
             this.updateStatus();
         }

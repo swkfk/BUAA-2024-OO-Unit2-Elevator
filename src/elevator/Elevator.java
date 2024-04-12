@@ -174,6 +174,8 @@ public class Elevator {
                 if (request.getToFloor() != floor) {
                     request.setFromFloor(floor);  // Elevator will not move in reset
                     removed.add(request);
+                } else {
+                    GlobalCounter.decrease();
                 }
             }
             onboardRequests.clear();
@@ -203,13 +205,13 @@ public class Elevator {
         );
     }
 
-    public ElevatorLimits getLimits() {
-        return limits;
-    }
-
     public ElevatorStatus getStatus(long timeSnippet) {
         return new ElevatorStatus(
                 timeSnippet, floor, doorOpen, direction, limits, passageRequests, onboardRequests
         );
+    }
+
+    public ElevatorLimits getLimits() {
+        return limits;
     }
 }

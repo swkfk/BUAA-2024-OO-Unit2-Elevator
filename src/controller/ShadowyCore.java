@@ -147,11 +147,7 @@ public class ShadowyCore {
                     direction = direction.reverse();
                 }
                 // Ensure that the elevator's direction is correct
-                if (floor == limits.getMinFloor()) {
-                    direction = ElevatorDirection.UP;
-                } else if (floor == limits.getMaxFloor()) {
-                    direction = ElevatorDirection.DOWN;
-                }
+                direction = ensureDirection(direction, floor, limits);
                 enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
                 electricity += ELECTRICITY_OPEN * 2;
             } else if (hasSameDirectionRequest(direction, floor, waitRequests) &&
@@ -169,11 +165,7 @@ public class ShadowyCore {
                 enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
                 electricity += ELECTRICITY_OPEN * 2;
             } else {
-                if (floor == limits.getMinFloor()) {
-                    direction = ElevatorDirection.UP;
-                } else if (floor == limits.getMaxFloor()) {
-                    direction = ElevatorDirection.DOWN;
-                }
+                direction = ensureDirection(direction, floor, limits);
                 globalTime += moveDurationMs;
                 floor = move(direction, floor);
                 electricity += ELECTRICITY_MOVE;
@@ -185,6 +177,16 @@ public class ShadowyCore {
         }
 
         return new long[]{globalTime + electricity / electricityRatio, leaveTime};
+    }
+
+    private static ElevatorDirection ensureDirection(
+            ElevatorDirection direction, int floor, ElevatorLimits limits) {
+        if (floor == limits.getMinFloor()) {
+            return ElevatorDirection.UP;
+        } else if (floor == limits.getMaxFloor()) {
+            return ElevatorDirection.DOWN;
+        }
+        return direction;
     }
 
     private static boolean leaveElevator(
