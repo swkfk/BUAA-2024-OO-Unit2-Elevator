@@ -115,7 +115,7 @@ public class ShadowyCore {
 
         if (status.isOpened()) {
             globalTime += ElevatorLimits.CLOSE_DURATION_MS;  // Not so accurate
-            if (leaveElevator(floor, transferId, onboardRequests)) {
+            if (leaveElevator(floor, transferId, limits, onboardRequests)) {
                 leaveTime = globalTime;
                 transferId = -1;
             }
@@ -131,13 +131,13 @@ public class ShadowyCore {
                 insertTime = -1;
                 waitRequests.add(request);
             }
-            if (globalTime >= insertTime && request != null) {
+            if (globalTime >= insertTime && request != null && insertTime >= 0) {
                 insertTime = -1;
                 waitRequests.add(request);
             }
-            if (hasPassengerOut(floor, onboardRequests)) {
+            if (hasPassengerOut(floor, limits, onboardRequests)) {
                 globalTime += ElevatorLimits.OPENED_DURATION_MS;
-                if (leaveElevator(floor, transferId, onboardRequests)) {
+                if (leaveElevator(floor, transferId, limits, onboardRequests)) {
                     leaveTime = globalTime;
                     transferId = -1;
                 }
@@ -172,19 +172,26 @@ public class ShadowyCore {
                 floor = move(direction, floor);
                 electricity += ELECTRICITY_MOVE;
             }
+            if (globalTime > 300000) {
+                // pruned at 300 seconds
+                return new long[]{0x7fffffffL, -1L};
+            }
         }
 
         return new long[]{globalTime + electricity / electricityRatio, leaveTime};
     }
 
     private static boolean leaveElevator(
-            int floor, int targetId,
+            int floor, int targetId, ElevatorLimits limits,
             ArrayList<ElevatorStatus.PlainRequest> onboardRequests) {
         boolean gotTarget = false;
         Iterator<ElevatorStatus.PlainRequest> iterator = onboardRequests.iterator();
         while (iterator.hasNext()) {
             ElevatorStatus.PlainRequest request = iterator.next();
             if (request.getToFloor() == floor) {
+                iterator.remove();
+            } else if (floor == limits.getTransferFloor() &&
+                    !limits.reachable(request.getToFloor())) {
                 iterator.remove();
             }
             if (request.same(targetId)) {
@@ -241,10 +248,13 @@ public class ShadowyCore {
         return false;
     }
 
-    private static boolean hasPassengerOut(
-            int floor, ArrayList<ElevatorStatus.PlainRequest> onboardRequests) {
+    private static boolean hasPassengerOut(int floor, ElevatorLimits limits,
+                                           ArrayList<ElevatorStatus.PlainRequest> onboardRequests) {
         for (ElevatorStatus.PlainRequest request : onboardRequests) {
             if (request.getToFloor() == floor) {
+                return true;
+            }
+            if (floor == limits.getTransferFloor() && !limits.reachable(request.getToFloor())) {
                 return true;
             }
         }
