@@ -94,7 +94,7 @@ public class SchedulerThread extends Thread {
         for (int i = ElevatorLimits.ELEVATOR_COUNT; i < ElevatorLimits.ELEVATOR_COUNT * 2; ++i) {
             synchronized (passageRequestsQueues.get(i)) {
                 synchronized (passageRequestsQueues.get(i - 6)) {
-                    if (!buddyThreads.get(i - 6).isAlive()) {
+                    if (!buddyThreads.get(i - 6).isReadyToAccept()) {
                         // Not started yet
                         timeDelta = ShadowyCore.calculate(
                                 elevatorStatuses.get(i).get(), request, passageRequestsQueues.get(i)

@@ -14,7 +14,7 @@ public class RequestsQueue<T> {
         requests.add(request);
         // If it is the waitQueue, the only one thread is Scheduler
         // If it is the passageRequestsQueue, the only one thread is Elevator
-        this.notify();
+        this.notifyAll();
     }
 
     public synchronized void setEnd() {

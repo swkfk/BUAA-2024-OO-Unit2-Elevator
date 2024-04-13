@@ -10,6 +10,7 @@ import requests.ResetRequest;
 
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -22,6 +23,7 @@ public class ElevatorThread extends Thread {
     private final AtomicReference<ResetRequest> reset;
     private final Semaphore resetSemaphore;
     private final ElevatorThread buddy;
+    private final AtomicBoolean readyToAccept;
 
     public ElevatorThread(
             int elevatorId, RequestsQueue<PassageRequest> requestsQueue,
@@ -35,6 +37,7 @@ public class ElevatorThread extends Thread {
         this.status = status;
         this.reset = reset;
         this.resetSemaphore = resetSemaphore;
+        this.readyToAccept = new AtomicBoolean(true);
         this.buddy = elevatorThread;
         this.updateStatus();
         this.createTimeSnippet();
@@ -51,6 +54,7 @@ public class ElevatorThread extends Thread {
         this.status = status;
         this.reset = null;
         this.resetSemaphore = null;
+        this.readyToAccept = new AtomicBoolean(false);
         this.buddy = null;
         this.updateStatus();
         this.createTimeSnippet();
@@ -114,6 +118,8 @@ public class ElevatorThread extends Thread {
         buddy.elevator.reset(resetRequest);
         this.setElevatorFloor(1, transferFloor, transferFloor - 1);
         buddy.setElevatorFloor(transferFloor, 11, transferFloor + 1);
+        this.updateStatus();
+        buddy.updateStatus();
     }
 
     private void doReset() {
@@ -141,13 +147,6 @@ public class ElevatorThread extends Thread {
         createTimeSnippet();
         this.updateStatusWithTimeStamp();
 
-        if (transferFloor > 0) {
-            // Double car reset
-            setBuddyAttribute(resetRequest, transferFloor);
-        } else {
-            this.updateStatus();
-        }
-
         // Clear the shared request queue between the scheduler and the elevator
         synchronized (this.requestsQueue) {
             PassageRequest request = this.requestsQueue.popRequestWithoutWait();
@@ -155,13 +154,9 @@ public class ElevatorThread extends Thread {
                 removed.add(request);
                 request = this.requestsQueue.popRequestWithoutWait();
             }
-        }
-
-        synchronized (buddy.requestsQueue) {
-            PassageRequest request = buddy.requestsQueue.popRequestWithoutWait();
-            while (request != null) {
-                removed.add(request);
-                request = buddy.requestsQueue.popRequestWithoutWait();
+            if (transferFloor > 0) {
+                setBuddyAttribute(resetRequest, transferFloor);
+                buddy.readyToAccept.set(true);
             }
         }
 
@@ -179,16 +174,14 @@ public class ElevatorThread extends Thread {
         createTimeSnippet();
         buddy.createTimeSnippet();
 
+        if (transferFloor > 0) {
+            buddy.start();
+        }
+
         synchronized (reset) {
             reset.set(null);  // Ensure that reset will not be written twice
             reset.notify();
         }
-
-        if (transferFloor > 0) {
-            this.updateStatus();
-            buddy.start();
-        }
-
         resetSemaphore.release();
     }
 
@@ -255,5 +248,9 @@ public class ElevatorThread extends Thread {
             }
         }
         // System.out.printf("ElevatorThread-%d ends%n", elevator.getElevatorId());
+    }
+
+    public boolean isReadyToAccept() {
+        return readyToAccept.get();
     }
 }
