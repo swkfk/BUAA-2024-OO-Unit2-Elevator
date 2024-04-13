@@ -98,9 +98,15 @@ public class ElevatorThread extends Thread {
             PassageRequest request = requestsQueue.popRequestWithoutWait();
             while (request != null) {
                 // Add request to elevator directly
-                elevator.addRequest(request);
-                this.updateStatus();
-                FormattedPrinter.receiveRequest(request, elevator);
+                if (elevator.reachable(request)) {
+                    elevator.addRequest(request);
+                    this.updateStatus();
+                    FormattedPrinter.receiveRequest(request, elevator);
+                } else {
+                    waitQueue.addRequest(request);
+                    this.updateStatus();
+                    GlobalCounter.rawNotify();
+                }
                 try {
                     // How dare you! It's strange to wait for 1ms but useful?
                     this.requestsQueue.wait(1);

@@ -225,4 +225,13 @@ public class Elevator {
     public ElevatorLimits getLimits() {
         return limits;
     }
+
+    public boolean reachable(PassageRequest request) {
+        if (!limits.reachable(request.getFromFloor())) {
+            return false;
+        }
+        // from floor is reachable
+        return request.getFromFloor() != limits.getTransferFloor() ||
+                limits.reachable(request.getToFloor());
+    }
 }
