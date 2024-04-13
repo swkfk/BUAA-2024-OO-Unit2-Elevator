@@ -22,9 +22,7 @@ public class Strategy {
         // If reach the transfer floor, must open or move immediately
         if (limits.getTransferFloor() == floor) {
             // Have passengers wanting to leave at this floor or go to the floor unreachable
-            if (hasTargetAhead(limits.getZoneDirection(), onboards, floor) ||
-                    // Have requests under the reachable zone
-                    hasRequestSameDirectionThisFloor(requests, floor, limits.getZoneDirection())) {
+            if (hasLeaveTrans(onboards, limits) || hasRequestTrans(requests, onboards, limits)) {
                 if (direction == limits.getZoneDirection()) {
                     return ElevatorStrategyType.OPEN;
                 } else {
@@ -39,7 +37,7 @@ public class Strategy {
             }
         }
         // If someone want to leave, must open the door!
-        if (needOpenOut(onboards, floor)) {
+        if (needOpenOut(onboards, floor, limits)) {
             if (hasRequestSameDirectionThisFloor(requests, floor, direction)) {
                 // Passenger with the same direction
                 return ElevatorStrategyType.OPEN;
@@ -86,6 +84,38 @@ public class Strategy {
         }
     }
 
+    private static boolean hasRequestTrans(
+            ArrayList<PassageRequest> requests, ArrayList<PassageRequest> onboards,
+            ElevatorLimits limits) {
+        int rest = limits.getMaxPassenger() - onboards.size();
+        for (PassageRequest request : onboards) {
+            if (request.getToFloor() == limits.getTransferFloor()
+                    || !limits.reachable(request.getToFloor())) {
+                rest++;
+            }
+        }
+        if (rest == 0) {
+            return false;
+        }
+        for (PassageRequest request : requests) {
+            if (request.getFromFloor() == limits.getTransferFloor()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasLeaveTrans(
+            ArrayList<PassageRequest> onboards, ElevatorLimits limits) {
+        for (PassageRequest request : onboards) {
+            if (request.getToFloor() == limits.getTransferFloor()
+                    || !limits.reachable(request.getToFloor())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static boolean hasRequestSameDirectionThisFloor(
             ArrayList<PassageRequest> requests, int floor, ElevatorDirection direction) {
         for (PassageRequest request : requests) {
@@ -106,9 +136,11 @@ public class Strategy {
         return false;
     }
 
-    private static boolean needOpenOut(ArrayList<PassageRequest> onboards, int floor) {
+    private static boolean needOpenOut(
+            ArrayList<PassageRequest> onboards, int floor, ElevatorLimits limits) {
         for (PassageRequest onboard : onboards) {
-            if (onboard.getToFloor() == floor) {
+            if ((!limits.reachable(onboard.getToFloor()) && floor == limits.getTransferFloor())
+                    || onboard.getToFloor() == floor) {
                 return true;
             }
         }

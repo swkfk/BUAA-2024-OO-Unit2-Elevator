@@ -98,6 +98,7 @@ public class Elevator {
 
     public void moveReversely() {
         reverse();
+        ensureDirection();
         move();
     }
 
@@ -106,6 +107,16 @@ public class Elevator {
             direction = ElevatorDirection.DOWN;
         } else {
             direction = ElevatorDirection.UP;
+        }
+    }
+
+    public void ensureDirection() {
+        if (floor == limits.getTransferFloor()) {
+            direction = limits.getZoneDirection();
+        } else if (floor == limits.getMinFloor()) {
+            direction = ElevatorDirection.UP;
+        } else if (floor == limits.getMaxFloor()) {
+            direction = ElevatorDirection.DOWN;
         }
     }
 

@@ -224,6 +224,7 @@ public class ElevatorThread extends Thread {
                     }
                 }
             } else if (strategyType == Strategy.ElevatorStrategyType.MOVE) {
+                elevator.ensureDirection();  // All tricks have been exhausted
                 preciselySleep(elevator.getMoveDurationMs());
                 tryGetRequest();
                 strategyType = Strategy.elevatorStrategy(elevator);
@@ -233,6 +234,7 @@ public class ElevatorThread extends Thread {
                 elevator.move();  // Output first
                 createTimeSnippet();  // Then record the time
             } else if (strategyType == Strategy.ElevatorStrategyType.OPEN) {
+                elevator.ensureDirection();
                 createTimeSnippet(elevator.openDoor(waitQueue));
                 preciselySleep(ElevatorLimits.OPENED_DURATION_MS);
                 createTimeSnippet();
@@ -243,10 +245,11 @@ public class ElevatorThread extends Thread {
                 if (strategyType == Strategy.ElevatorStrategyType.OPEN) {
                     continue;
                 }
-                elevator.moveReversely();
+                elevator.moveReversely();  // Will ensure the direction
                 createTimeSnippet();
             } else if (strategyType == Strategy.ElevatorStrategyType.REVISE_OPEN) {
                 elevator.reverse();
+                elevator.ensureDirection();
                 createTimeSnippet(elevator.openDoor(waitQueue));
                 preciselySleep(ElevatorLimits.OPENED_DURATION_MS);
             }
