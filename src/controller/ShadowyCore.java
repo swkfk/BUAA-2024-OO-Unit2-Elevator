@@ -85,9 +85,8 @@ public class ShadowyCore {
 
     private static long[] calculate(ElevatorStatus status, long electricityRatio, int targetId,
                                     long arriveTime, ElevatorStatus.PlainRequest request) {
-        int transferId = targetId;
+        InsertPack insertPack = new InsertPack(arriveTime, targetId);
         long electricity = 0L;
-        long leaveTime = -1L;
         // Basic Limits
         ElevatorLimits limits = status.getLimits();
         int maxPassenger = limits.getMaxPassenger();
@@ -98,10 +97,8 @@ public class ShadowyCore {
         // }
 
         // Shallow Copied ArrayList
-        ArrayList<ElevatorStatus.PlainRequest> waitRequests =
-                new ArrayList<>(status.getWaitRequests());
-        ArrayList<ElevatorStatus.PlainRequest> onboardRequests =
-                new ArrayList<>(status.getOnboardRequests());
+        ArrayList<ElevatorStatus.PlainRequest> waitRs = new ArrayList<>(status.getWaitRequests());
+        ArrayList<ElevatorStatus.PlainRequest> onRs = new ArrayList<>(status.getOnboardRequests());
 
         long globalTime = -1;
         if (status.getResetStartTime() != 0) {
@@ -115,54 +112,42 @@ public class ShadowyCore {
 
         if (status.isOpened()) {
             globalTime += ElevatorLimits.CLOSE_DURATION_MS;  // Not so accurate
-            if (leaveElevator(floor, transferId, limits, onboardRequests)) {
-                leaveTime = globalTime;
-                transferId = -1;
+            if (leaveElevator(floor, insertPack.transferId, limits, onRs)) {
+                insertPack.leave(globalTime);
             }
-            enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
+            enterSameDirection(direction, floor, maxPassenger, waitRs, onRs);
             electricity += ELECTRICITY_OPEN;
         }
 
-        long insertTime = arriveTime;
+        while ((onRs.size() != 0 || waitRs.size() != 0 || insertPack.insertTime >= 0)
+                && globalTime < 400000) {
+            globalTime = insertPack.insertSkip(globalTime, request, waitRs, onRs);
+            insertPack.insert(globalTime, request, waitRs);
 
-        while (onboardRequests.size() != 0 || waitRequests.size() != 0 || insertTime >= 0) {
-            if (onboardRequests.size() == 0 && waitRequests.size() == 0 && request != null) {
-                globalTime = Math.max(globalTime, insertTime);
-                insertTime = -1;
-                waitRequests.add(request);
-            }
-            if (globalTime >= insertTime && request != null && insertTime >= 0) {
-                insertTime = -1;
-                waitRequests.add(request);
-            }
-            if (hasPassengerOut(floor, limits, onboardRequests)) {
+            if (hasPassengerOut(floor, limits, onRs)) {
                 globalTime += ElevatorLimits.OPENED_DURATION_MS;
-                if (leaveElevator(floor, transferId, limits, onboardRequests)) {
-                    leaveTime = globalTime;
-                    transferId = -1;
+                if (leaveElevator(floor, insertPack.transferId, limits, onRs)) {
+                    insertPack.leave(globalTime);
                 }
-                if (onboardRequests.size() == 0 &&
-                        !hasRequestAhead(direction, floor, waitRequests) &&
-                        !hasSameDirectionRequest(direction, floor, waitRequests)) {
+                if (onRs.size() == 0 && !hasReqAhead(direction, floor, waitRs) &&
+                        !hasSameDirReq(direction, floor, waitRs)) {
                     direction = direction.reverse();
                 }
                 // Ensure that the elevator's direction is correct
                 direction = ensureDirection(direction, floor, limits);
-                enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
+                enterSameDirection(direction, floor, maxPassenger, waitRs, onRs);
                 electricity += ELECTRICITY_OPEN * 2;
-            } else if (hasSameDirectionRequest(direction, floor, waitRequests) &&
-                    hasSpace(onboardRequests, maxPassenger)) {
+            } else if (hasSameDirReq(direction, floor, waitRs) && hasSpace(onRs, maxPassenger)) {
                 globalTime += ElevatorLimits.OPENED_DURATION_MS;
-                enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
+                enterSameDirection(direction, floor, maxPassenger, waitRs, onRs);
                 electricity += ELECTRICITY_OPEN * 2;
-            } else if (!hasRequestAhead(direction, floor, waitRequests) &&
-                    hasOppositeDirectionRequest(direction, floor, waitRequests) &&
-                    hasSpace(onboardRequests, maxPassenger)) {
+            } else if (!hasReqAhead(direction, floor, waitRs) &&
+                    hasOppoDirReq(direction, floor, waitRs) && hasSpace(onRs, maxPassenger)) {
                 // No request ahead, but there is an opposite direction request
                 // Change the direction
                 direction = direction.reverse();
                 globalTime += ElevatorLimits.OPENED_DURATION_MS;
-                enterSameDirection(direction, floor, maxPassenger, waitRequests, onboardRequests);
+                enterSameDirection(direction, floor, maxPassenger, waitRs, onRs);
                 electricity += ELECTRICITY_OPEN * 2;
             } else {
                 direction = ensureDirection(direction, floor, limits);
@@ -170,13 +155,9 @@ public class ShadowyCore {
                 floor = move(direction, floor);
                 electricity += ELECTRICITY_MOVE;
             }
-            if (globalTime > 300000) {
-                // pruned at 300 seconds
-                return new long[]{10000003L, -1L};
-            }
         }
 
-        return new long[]{globalTime + electricity / electricityRatio, leaveTime};
+        return new long[]{globalTime + electricity / electricityRatio, insertPack.leaveTime};
     }
 
     private static ElevatorDirection ensureDirection(
@@ -234,7 +215,7 @@ public class ShadowyCore {
         }
     }
 
-    private static boolean hasSameDirectionRequest(
+    private static boolean hasSameDirReq(
             ElevatorDirection direction, int floor,
             ArrayList<ElevatorStatus.PlainRequest> waitRequests) {
         for (ElevatorStatus.PlainRequest request : waitRequests) {
@@ -245,7 +226,7 @@ public class ShadowyCore {
         return false;
     }
 
-    private static boolean hasOppositeDirectionRequest(
+    private static boolean hasOppoDirReq(
             ElevatorDirection direction, int floor,
             ArrayList<ElevatorStatus.PlainRequest> waitRequests) {
         for (ElevatorStatus.PlainRequest request : waitRequests) {
@@ -269,7 +250,7 @@ public class ShadowyCore {
         return false;
     }
 
-    private static boolean hasRequestAhead(
+    private static boolean hasReqAhead(
             ElevatorDirection direction, int floor,
             ArrayList<ElevatorStatus.PlainRequest> waitRequests) {
         for (ElevatorStatus.PlainRequest request : waitRequests) {
@@ -286,5 +267,42 @@ public class ShadowyCore {
     private static boolean hasSpace(
             ArrayList<ElevatorStatus.PlainRequest> onboardRequests, int max) {
         return onboardRequests.size() < max;
+    }
+
+    private static class InsertPack {
+        private long insertTime;
+        private long leaveTime;
+        private int transferId;
+
+        public InsertPack(long insertTime, int transferId) {
+            this.insertTime = insertTime;
+            this.leaveTime = -1L;
+            this.transferId = transferId;
+        }
+
+        public void leave(long leaveTime) {
+            this.leaveTime = leaveTime;
+            this.transferId = -1;
+        }
+
+        public void insert(long globalTime, ElevatorStatus.PlainRequest request,
+                           ArrayList<ElevatorStatus.PlainRequest> waitRs) {
+            if (globalTime >= insertTime && request != null && insertTime >= 0) {
+                insertTime = -1;
+                waitRs.add(request);
+            }
+        }
+
+        public long insertSkip(
+                long globalTime, ElevatorStatus.PlainRequest request,
+                ArrayList<ElevatorStatus.PlainRequest> waitRs,
+                ArrayList<ElevatorStatus.PlainRequest> onRs) {
+            if (onRs.size() == 0 && waitRs.size() == 0 && request != null) {
+                insertTime = -1;
+                waitRs.add(request);
+                return Math.max(globalTime, insertTime);
+            }
+            return globalTime;
+        }
     }
 }
